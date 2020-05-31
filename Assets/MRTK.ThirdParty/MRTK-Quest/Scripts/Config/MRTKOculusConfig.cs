@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------ -
+//------------------------------------------------------------------------------ -
 //MRTK - Quest
 //https ://github.com/provencher/MRTK-Quest
 //------------------------------------------------------------------------------ -
@@ -55,6 +55,7 @@ namespace prvncher.MixedReality.Toolkit.Config
                 return instance;
             }
         }
+
         [Header("Config")]
         [SerializeField]
         [Tooltip("Using avatar hands requires a local avatar prefab. Failure to provide one will result in nothing being displayed. \n\n" +
@@ -111,7 +112,7 @@ namespace prvncher.MixedReality.Toolkit.Config
         /// <summary>
         /// Event triggered when the custom material for hand mesh is updated.
         /// </summary>
-        public System.Action OnCustomHandMaterialUpdate;
+        public static System.Action OnCustomHandMaterialUpdate;
 
         /// <summary>
         /// Custom hand material to use for hand tracking hand mesh.

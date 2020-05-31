@@ -81,7 +81,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             base.Enable();
             SetupInput();
             ConfigurePerformancePreferences();
-            MRTKOculusConfig.Instance.OnCustomHandMaterialUpdate += UpdateHandMaterial;
+            MRTKOculusConfig.OnCustomHandMaterialUpdate += UpdateHandMaterial;
         }
 
         private void SetupInput()
@@ -160,7 +160,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             base.Disable();
 
-            MRTKOculusConfig.Instance.OnCustomHandMaterialUpdate -= UpdateHandMaterial;
+            MRTKOculusConfig.OnCustomHandMaterialUpdate -= UpdateHandMaterial;
             RemoveAllControllerDevices();
             RemoveAllHandDevices();
         }
