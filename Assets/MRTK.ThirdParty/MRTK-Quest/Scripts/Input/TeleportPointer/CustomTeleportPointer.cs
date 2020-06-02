@@ -28,14 +28,11 @@
 
 using System;
 using System.Collections;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
 using Microsoft.MixedReality.Toolkit.Teleport;
 using Microsoft.MixedReality.Toolkit.Utilities;
-using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityPhysics = UnityEngine.Physics;
@@ -246,14 +243,58 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region Base Pointer Management
 
-        /// <summary>
-        ///  TODO initializes these fields
-        /// </summary>
 
-        public IMixedRealityController Controller { get; set; }
-        public uint PointerId { get; }
-        public string PointerName { get; set; }
-        public IMixedRealityInputSource InputSourceParent { get; }
+        private IMixedRealityController controller;
+
+        /// <inheritdoc />
+        public IMixedRealityController Controller
+        {
+            get => controller;
+            set
+            {
+                controller = value;
+                if (value != null)
+                {
+                    PointerName = gameObject.name;
+                    InputSourceParent = value.InputSource;
+                }
+            }
+        }
+
+        public IMixedRealityInputSource InputSourceParent { get; private set; }
+
+        private uint pointerId;
+
+        /// <inheritdoc />
+        public uint PointerId
+        {
+            get
+            {
+                if (pointerId == 0)
+                {
+                    pointerId = CoreServices.InputSystem.FocusProvider.GenerateNewPointerId();
+                }
+
+                return pointerId;
+            }
+        }
+
+        private string pointerName = string.Empty;
+
+        /// <inheritdoc />
+        public string PointerName
+        {
+            get => pointerName;
+            set
+            {
+                pointerName = value;
+                if (this != null)
+                {
+                    gameObject.name = value;
+                }
+            }
+        }
+
         public IMixedRealityCursor BaseCursor { get; set; }
         public ICursorModifier CursorModifier { get; set; }
 
@@ -468,7 +509,8 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     // The pointer's input source was lost during the await.
                     if (Controller == null)
                     {
-                        Destroy(gameObject);
+                        // Since we manually manage this pointer, we dont need a specific controller to point to.
+                        //Destroy(gameObject);
                         yield break;
                     }
                 }
@@ -479,6 +521,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 }
 
                 lateRegisterTeleport = false;
+
                 CoreServices.TeleportSystem.RegisterHandler<IMixedRealityTeleportHandler>(this);
             }
         }

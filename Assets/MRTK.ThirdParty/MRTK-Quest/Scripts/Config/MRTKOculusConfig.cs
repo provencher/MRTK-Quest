@@ -90,6 +90,16 @@ namespace prvncher.MixedReality.Toolkit.Config
         [Tooltip("Prefab reference for LocalAvatar to load, if none are found in scene.")]
         private GameObject localAvatarPrefab = null;
 
+        [Header("Pointer Configuration")]
+        [SerializeField]
+        [Tooltip("Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently support teleport with articulated hands.")]
+        private GameObject customTeleportPointerPrefab = null;
+
+        /// <summary>
+        /// Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently support teleport with articulated hands.
+        /// </summary>
+        public GameObject CustomTeleportPrefab => customTeleportPointerPrefab;
+
         /// <summary>
         /// Prefab reference for LocalAvatar to load, if none are found in scene.
         /// </summary>

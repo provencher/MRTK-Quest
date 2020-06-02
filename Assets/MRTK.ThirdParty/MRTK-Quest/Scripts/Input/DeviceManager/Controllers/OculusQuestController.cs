@@ -103,6 +103,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         public override MixedRealityInteractionMapping[] DefaultRightHandedInteractions => DefaultInteractions;
 
+        [System.Obsolete]
         public override void SetupDefaultInteractions(Handedness controllerHandedness)
         {
             AssignControllerMappings(DefaultInteractions);
