@@ -31,6 +31,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+using prvncher.MixedReality.Toolkit.Input.Teleport;
 using UnityEngine;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
@@ -42,6 +43,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
+        public CustomTeleportPointer TeleportPointer { get; set; }
 
         private List<Renderer> handRenderers = new List<Renderer>();
         private Material handMaterial = null;
@@ -166,6 +168,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 isGripPressed = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger) > cTriggerDeadZone;
             }
 
+            bool isSelecting = isTriggerPressed || isGripPressed;
+
             for (int i = 0; i < Interactions?.Length; i++)
             {
                 switch (Interactions[i].InputType)
@@ -185,7 +189,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         }
                         break;
                     case DeviceInputType.Select:
-                        Interactions[i].BoolData = isTriggerPressed || isGripPressed;
+                        Interactions[i].BoolData = isSelecting;
 
                         if (Interactions[i].Changed)
                         {
@@ -200,7 +204,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         }
                         break;
                     case DeviceInputType.TriggerPress:
-                        Interactions[i].BoolData = isGripPressed || isTriggerPressed;
+                        Interactions[i].BoolData = isSelecting;
 
                         if (Interactions[i].Changed)
                         {
@@ -217,6 +221,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     case DeviceInputType.IndexFinger:
                         UpdateIndexFingerData(Interactions[i]);
                         break;
+                }
+
+                if (TeleportPointer != null)
+                {
+                    TeleportPointer.gameObject.SetActive(IsPositionAvailable);
+                    TeleportPointer.transform.position = worldPosition;
+                    TeleportPointer.transform.rotation = worldRotation;
+                    TeleportPointer.UpdatePointer(isSelecting, IsPositionAvailable, Vector2.up);
                 }
             }
         }

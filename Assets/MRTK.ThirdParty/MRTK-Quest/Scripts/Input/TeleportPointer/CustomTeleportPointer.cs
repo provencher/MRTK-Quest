@@ -255,7 +255,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 controller = value;
                 if (value != null)
                 {
-                    PointerName = gameObject.name;
+                    PointerName = nameof(CustomTeleportPointer) + " " + Controller.ControllerHandedness;
                     InputSourceParent = value.InputSource;
                 }
             }
@@ -409,8 +409,8 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         public virtual SceneQueryType SceneQueryType { get; set; } = SceneQueryType.SimpleRaycast;
 
         public float SphereCastRadius { get; set; }
-        public Vector3 Position { get; }
-        public Quaternion Rotation { get; }
+        public Vector3 Position => transform.position;
+        public Quaternion Rotation => transform.rotation;
 
         #endregion
 
@@ -658,7 +658,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             TeleportSurfaceResult = TeleportSurfaceResult.None;
             GravityDistorter.enabled = false;
 
-            if (IsInteractionEnabled)
+            if (IsActive)//IsInteractionEnabled)
             {
                 LineBase.enabled = true;
 
@@ -747,7 +747,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             for (int i = 0; i < Rays.Length; i++)
             {
 
-                if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], PrioritizedLayerMasksOverride, true, out MixedRealityRaycastHit hitInfo))
+                if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], new LayerMask[]{ ValidLayers }, true, out MixedRealityRaycastHit hitInfo))
                 {
                     hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
                     break;
