@@ -48,15 +48,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
     /// </summary>
     public class CustomTeleportPointer : MonoBehaviour, IMixedRealityTeleportHandler, IMixedRealityTeleportPointer
     {
-        internal class TeleportPointerData : IPointerResult
-        {
-            public Vector3 StartPoint { get; }
-            public FocusDetails Details { get; }
-            public GameObject CurrentPointerTarget { get; }
-            public GameObject PreviousPointerTarget { get; }
-            public int RayStepIndex { get; }
-        }
-
         /// <summary>
         /// True if a teleport request is being raised, false otherwise.
         /// </summary>
@@ -168,7 +159,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         private bool canMove = false;
 
-        private Handedness pointerHandedness = Handedness.None;
+        // private Handedness pointerHandedness = Handedness.None;
 
         #region Line Management
 
@@ -254,6 +245,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         #endregion
 
         #region Base Pointer Management
+
+        /// <summary>
+        ///  TODO initializes these fields
+        /// </summary>
 
         public IMixedRealityController Controller { get; set; }
         public uint PointerId { get; }
@@ -608,10 +603,12 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// <inheritdoc />
         public void OnPostSceneQuery()
         {
+            /*
             if (IsSelectPressed)
             {
                 CoreServices.InputSystem.RaisePointerDragged(this, MixedRealityInputAction.None, pointerHandedness);
             }
+            */
 
             // Use the results from the last update to set our NavigationResult
             float clearWorldLength = 0f;
@@ -690,10 +687,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region IMixedRealityInputHandler Implementation
 
-        public void UpdatePointer(Handedness handedness)
+        public void UpdatePointer(bool isPressing, bool isActive, Vector2 teleportDirection)
         {
-            pointerHandedness = handedness;
-
+            IsActive = isActive;
+            IsFocusLocked = isPressing;
 
             // Call the pointer's OnPreSceneQuery function
             // This will give it a chance to prepare itself for raycasts
@@ -701,6 +698,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             OnPreSceneQuery();
 
             TeleportPointerData pointerData = new TeleportPointerData();
+            TeleportPointerHitResult hitResult = new TeleportPointerHitResult();
 
             float rayStartDistance = 0;
             for (int i = 0; i < Rays.Length; i++)
@@ -708,91 +706,29 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
                 if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], PrioritizedLayerMasksOverride, true, out MixedRealityRaycastHit hitInfo))
                 {
-                    //pointerData.CurrentPointerTarget = hitInfo.
-
-                    pointerData.Details
-
-                    Result.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
-
-                    raycastHit = hit;
-                    graphicsRaycastResult = default(RaycastResult);
-
-                    hitObject = focusIndividualCompoundCollider ? hit.collider.gameObject : hit.transform.gameObject;
-                    hitPointOnObject = hit.point;
-                    hitNormalOnObject = hit.normal;
+                    hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
                     break;
                 }
-
                 rayStartDistance += Rays[i].Length;
             }
 
+            pointerData.UpdateHit(this, hitResult);
             Result = pointerData;
 
             // Call the pointer's OnPostSceneQuery function.
             // This will give it a chance to respond to raycast results
             // e.g., by updating its appearance.
             OnPostSceneQuery();
-        }
 
-        public void UpdateHit(PointerHitResult hitResult)
-        {
-            using (UpdateHitPerfMarker.Auto())
+
+            if (currentInputPosition != teleportDirection)
             {
-                if (hitResult.hitObject != CurrentPointerTarget)
-                {
-                    Pointer.OnPreCurrentPointerTargetChange();
-                }
-
-                PreviousPointerTarget = CurrentPointerTarget;
-
-                focusDetails.Object = hitResult.hitObject;
-                focusDetails.LastRaycastHit = hitResult.raycastHit;
-                focusDetails.LastGraphicsRaycastResult = hitResult.graphicsRaycastResult;
-
-                if (hitResult.rayStepIndex >= 0)
-                {
-                    RayStepIndex = hitResult.rayStepIndex;
-                    StartPoint = hitResult.ray.Origin;
-
-                    focusDetails.RayDistance = hitResult.rayDistance;
-                    focusDetails.Point = hitResult.hitPointOnObject;
-                    focusDetails.Normal = hitResult.hitNormalOnObject;
-                }
-                else
-                {
-                    // If we don't have a valid ray cast, use the whole pointer ray.
-                    RayStep firstStep = Pointer.Rays[0];
-                    RayStep finalStep = Pointer.Rays[Pointer.Rays.Length - 1];
-                    RayStepIndex = 0;
-
-                    StartPoint = firstStep.Origin;
-
-                    float rayDist = 0.0f;
-                    for (int i = 0; i < Pointer.Rays.Length; i++)
-                    {
-                        rayDist += Pointer.Rays[i].Length;
-                    }
-
-                    focusDetails.RayDistance = rayDist;
-                    focusDetails.Point = finalStep.Terminus;
-                    focusDetails.Normal = -finalStep.Direction;
-                }
-
-                if (hitResult.hitObject != null)
-                {
-                    focusDetails.PointLocalSpace = hitResult.hitObject.transform.InverseTransformPoint(focusDetails.Point);
-                    focusDetails.NormalLocalSpace = hitResult.hitObject.transform.InverseTransformDirection(focusDetails.Normal);
-                }
-                else
-                {
-                    focusDetails.PointLocalSpace = Vector3.zero;
-                    focusDetails.NormalLocalSpace = Vector3.zero;
-                }
+                OnInputChanged(teleportDirection);
             }
         }
 
         /// <inheritdoc />
-        public void OnInputChanged(InputEventData<Vector2> eventData)
+        private void OnInputChanged(Vector2 newInputSource)
         {
             // Don't process input if we've got an active teleport request in progress.
             if (isTeleportRequestActive || CoreServices.TeleportSystem == null)
@@ -800,12 +736,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 return;
             }
 
-            if (eventData.SourceId == InputSourceParent.SourceId &&
-                eventData.Handedness == pointerHandedness &&
-                eventData.MixedRealityInputAction == teleportAction)
-            {
-                currentInputPosition = eventData.InputData;
-            }
+            currentInputPosition = newInputSource;
 
             if (currentInputPosition.sqrMagnitude > InputThresholdSquared)
             {
@@ -1003,5 +934,180 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         }
 
         #endregion IEquality Implementation
+
+
+        #region Helper Classes
+
+        private class TeleportPointerData : IPointerResult
+        {
+            public Vector3 StartPoint { get; private set; }
+            public FocusDetails Details { get; private set; } = new FocusDetails();
+            public GameObject CurrentPointerTarget { get; private set; }
+            public GameObject PreviousPointerTarget { get; private set; }
+            public int RayStepIndex { get; private set; }
+
+            public void UpdateHit(CustomTeleportPointer teleportPointer, TeleportPointerHitResult hitResult)
+            {
+                if (hitResult.hitObject != CurrentPointerTarget)
+                {
+                    teleportPointer.OnPreCurrentPointerTargetChange();
+                }
+
+                PreviousPointerTarget = CurrentPointerTarget;
+
+                float rayDistance;
+                Vector3 hitPointOnObject;
+                Vector3 hitNormalOnObject;
+
+                if (hitResult.rayStepIndex >= 0)
+                {
+                    RayStepIndex = hitResult.rayStepIndex;
+                    StartPoint = hitResult.ray.Origin;
+
+                    rayDistance = hitResult.rayDistance;
+                    hitPointOnObject = hitResult.hitPointOnObject;
+                    hitNormalOnObject = hitResult.hitNormalOnObject;
+                }
+                else
+                {
+                    // If we don't have a valid ray cast, use the whole pointer ray.
+                    RayStep firstStep = teleportPointer.Rays[0];
+                    RayStep finalStep = teleportPointer.Rays[teleportPointer.Rays.Length - 1];
+                    RayStepIndex = 0;
+
+                    StartPoint = firstStep.Origin;
+
+                    float rayDist = 0.0f;
+                    for (int i = 0; i < teleportPointer.Rays.Length; i++)
+                    {
+                        rayDist += teleportPointer.Rays[i].Length;
+                    }
+
+                    rayDistance = rayDist;
+                    hitPointOnObject = finalStep.Terminus;
+                    hitNormalOnObject = -finalStep.Direction;
+                }
+
+                Vector3 pointInLocalSpace;
+                Vector3 normalInLocalSpace;
+                if (hitResult.hitObject != null)
+                {
+                    pointInLocalSpace = hitResult.hitObject.transform.InverseTransformPoint(hitPointOnObject);
+                    normalInLocalSpace = hitResult.hitObject.transform.InverseTransformDirection(hitNormalOnObject);
+                }
+                else
+                {
+                    pointInLocalSpace = Vector3.zero;
+                    normalInLocalSpace = Vector3.zero;
+                }
+
+                Details = new FocusDetails
+                {
+                    Object = hitResult.hitObject,
+
+                    LastRaycastHit = hitResult.raycastHit,
+                    LastGraphicsRaycastResult = hitResult.graphicsRaycastResult,
+
+                    Point = hitPointOnObject,
+                    PointLocalSpace = pointInLocalSpace,
+
+                    Normal = hitNormalOnObject,
+                    NormalLocalSpace = normalInLocalSpace,
+
+                    RayDistance = rayDistance
+                };
+            }
+        }
+
+        /// <summary>
+        /// Helper class for storing intermediate hit results. Should be applied to the PointerData once all
+        /// possible hits of a pointer have been processed.
+        /// </summary>
+        private class TeleportPointerHitResult
+        {
+            public MixedRealityRaycastHit raycastHit;
+            public RaycastResult graphicsRaycastResult;
+
+            public GameObject hitObject;
+            public Vector3 hitPointOnObject = Vector3.zero;
+            public Vector3 hitNormalOnObject = Vector3.zero;
+
+            public RayStep ray;
+            public int rayStepIndex = -1;
+            public float rayDistance;
+
+            public void Clear()
+            {
+                raycastHit = default(MixedRealityRaycastHit);
+                graphicsRaycastResult = default(RaycastResult);
+
+                hitObject = null;
+                hitPointOnObject = Vector3.zero;
+                hitNormalOnObject = Vector3.zero;
+
+                ray = default(RayStep);
+                rayStepIndex = -1;
+                rayDistance = 0.0f;
+            }
+
+            /// <summary>
+            /// Set hit focus information from a closest-colliders-to pointer check.
+            /// </summary>
+            public void Set(GameObject hitObject, Vector3 hitPointOnObject, Vector4 hitNormalOnObject, RayStep ray, int rayStepIndex, float rayDistance)
+            {
+                raycastHit = default(MixedRealityRaycastHit);
+                graphicsRaycastResult = default(RaycastResult);
+
+                this.hitObject = hitObject;
+                this.hitPointOnObject = hitPointOnObject;
+                this.hitNormalOnObject = hitNormalOnObject;
+
+                this.ray = ray;
+                this.rayStepIndex = rayStepIndex;
+                this.rayDistance = rayDistance;
+            }
+
+            /// <summary>
+            /// Set hit focus information from a physics raycast.
+            /// </summary>
+            public void Set(MixedRealityRaycastHit hit, RayStep ray, int rayStepIndex, float rayDistance, bool focusIndividualCompoundCollider)
+            {
+                raycastHit = hit;
+                graphicsRaycastResult = default(RaycastResult);
+
+                hitObject = focusIndividualCompoundCollider ? hit.collider.gameObject : hit.transform.gameObject;
+                hitPointOnObject = hit.point;
+                hitNormalOnObject = hit.normal;
+
+                this.ray = ray;
+                this.rayStepIndex = rayStepIndex;
+                this.rayDistance = rayDistance;
+            }
+
+            /// <summary>
+            /// Set hit information from a canvas raycast.
+            /// </summary>
+            public void Set(RaycastResult result, Vector3 hitPointOnObject, Vector4 hitNormalOnObject, RayStep ray, int rayStepIndex, float rayDistance)
+            {
+                raycastHit = default(MixedRealityRaycastHit);
+                raycastHit.point = hitPointOnObject;
+                raycastHit.normal = hitNormalOnObject;
+                raycastHit.distance = rayDistance;
+                raycastHit.transform = result.gameObject.transform;
+                raycastHit.raycastValid = true;
+
+                graphicsRaycastResult = result;
+
+                this.hitObject = result.gameObject;
+                this.hitPointOnObject = hitPointOnObject;
+                this.hitNormalOnObject = hitNormalOnObject;
+
+                this.ray = ray;
+                this.rayStepIndex = rayStepIndex;
+                this.rayDistance = rayDistance;
+            }
+        }
+
+        #endregion
     }
 }
