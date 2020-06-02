@@ -48,6 +48,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private List<Renderer> handRenderers = new List<Renderer>();
         private Material handMaterial = null;
 
+        private bool isInPointingPose = true;
+        public override bool IsInPointingPose => isInPointingPose;
+
         #region AvatarHandReferences
         private GameObject handRoot = null;
         private GameObject handGrip = null;
@@ -157,15 +160,18 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             bool isTriggerPressed = false;
             bool isGripPressed = false;
+            Vector2 stickInput = Vector2.zero;
             if (ControllerHandedness == Handedness.Left)
             {
                 isTriggerPressed = OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger) > cTriggerDeadZone;
                 isGripPressed = OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger) > cTriggerDeadZone;
+                stickInput = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick);
             }
             else
             {
                 isTriggerPressed = OVRInput.Get(OVRInput.RawAxis1D.RIndexTrigger) > cTriggerDeadZone;
                 isGripPressed = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger) > cTriggerDeadZone;
+                stickInput = OVRInput.Get(OVRInput.RawAxis2D.RThumbstick);
             }
 
             bool isSelecting = isTriggerPressed || isGripPressed;
@@ -223,12 +229,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         break;
                 }
 
+                isInPointingPose = TeleportPointer == null || stickInput == Vector2.zero;
+
                 if (TeleportPointer != null)
                 {
                     TeleportPointer.gameObject.SetActive(IsPositionAvailable);
                     TeleportPointer.transform.position = worldPosition;
                     TeleportPointer.transform.rotation = worldRotation;
-                    TeleportPointer.UpdatePointer(isSelecting, IsPositionAvailable, Vector2.up);
+                    TeleportPointer.UpdatePointer(isInPointingPose, IsPositionAvailable, stickInput);
                 }
             }
         }

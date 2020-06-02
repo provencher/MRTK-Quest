@@ -28,6 +28,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
@@ -658,7 +659,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             TeleportSurfaceResult = TeleportSurfaceResult.None;
             GravityDistorter.enabled = false;
 
-            if (IsActive)//IsInteractionEnabled)
+            if (IsInteractionEnabled)
             {
                 LineBase.enabled = true;
 
@@ -730,6 +731,20 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region IMixedRealityInputHandler Implementation
 
+        private LayerMask[] GetLayerMaskLayers(LayerMask layers)
+        {
+            int x = (int)layers;
+            List<LayerMask> flags = new List<LayerMask>();
+            for (int i = 1; i < (1 << 30); i <<= 1)
+            {
+                if ((x & i) != 0)
+                {
+                    flags.Add(i);
+                }
+            }
+            return flags.ToArray();
+        }
+
         public void UpdatePointer(bool isPressing, bool isActive, Vector2 teleportDirection)
         {
             IsActive = isActive;
@@ -746,9 +761,11 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             float rayStartDistance = 0;
             for (int i = 0; i < Rays.Length; i++)
             {
-
-                if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], new LayerMask[]{ ValidLayers }, true, out MixedRealityRaycastHit hitInfo))
+                if (UnityEngine.Physics.Raycast(Rays[i].Origin, Rays[i].Direction, out RaycastHit rayCastHitResult, Rays[i].Length, ValidLayers))
+                //if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], GetLayerMaskLayers(ValidLayers), true, out MixedRealityRaycastHit hitInfo))
                 {
+                    MixedRealityRaycastHit hitInfo = new MixedRealityRaycastHit( true, rayCastHitResult);
+                    //UnityEngine.Debug.Log(rayCastHitResult.collider.gameObject);
                     hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
                     break;
                 }
@@ -758,11 +775,12 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             pointerData.UpdateHit(this, hitResult);
             Result = pointerData;
 
+            UnityEngine.Debug.Log(Result.CurrentPointerTarget);
+
             // Call the pointer's OnPostSceneQuery function.
             // This will give it a chance to respond to raycast results
             // e.g., by updating its appearance.
             OnPostSceneQuery();
-
 
             if (currentInputPosition != teleportDirection)
             {
@@ -1043,6 +1061,9 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     pointInLocalSpace = Vector3.zero;
                     normalInLocalSpace = Vector3.zero;
                 }
+
+                CurrentPointerTarget = hitResult.hitObject;
+                PreviousPointerTarget = null;
 
                 Details = new FocusDetails
                 {
