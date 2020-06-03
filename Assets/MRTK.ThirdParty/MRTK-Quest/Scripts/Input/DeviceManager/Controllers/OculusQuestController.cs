@@ -158,9 +158,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             // Todo: Complete touch controller mapping
 
-            bool isTriggerPressed = false;
-            bool isGripPressed = false;
-            Vector2 stickInput = Vector2.zero;
+            bool isTriggerPressed;
+            bool isGripPressed;
+            Vector2 stickInput;
             if (ControllerHandedness == Handedness.Left)
             {
                 isTriggerPressed = OVRInput.Get(OVRInput.RawAxis1D.LIndexTrigger) > cTriggerDeadZone;
@@ -175,6 +175,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             }
 
             bool isSelecting = isTriggerPressed || isGripPressed;
+
+            UpdateCustomTeleportPointer(stickInput, worldPosition, worldRotation);
 
             for (int i = 0; i < Interactions?.Length; i++)
             {
@@ -228,18 +230,20 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         UpdateIndexFingerData(Interactions[i]);
                         break;
                 }
-
-                bool pressingStick = stickInput != Vector2.zero;
-                isInPointingPose = TeleportPointer == null || !pressingStick;
-
-                if (TeleportPointer != null)
-                {
-                    TeleportPointer.gameObject.SetActive(IsPositionAvailable);
-                    TeleportPointer.transform.position = worldPosition;
-                    TeleportPointer.transform.rotation = worldRotation;
-                    TeleportPointer.UpdatePointer(isInPointingPose, pressingStick, stickInput);
-                }
             }
+        }
+
+        private void UpdateCustomTeleportPointer(Vector2 stickInput, Vector3 worldPosition, Quaternion worldRotation)
+        {
+            if (TeleportPointer == null) return;
+
+            bool pressingStick = stickInput != Vector2.zero;
+            isInPointingPose = !pressingStick;
+
+            TeleportPointer.gameObject.SetActive(IsPositionAvailable);
+            TeleportPointer.transform.position = worldPosition;
+            TeleportPointer.transform.rotation = worldRotation;
+            TeleportPointer.UpdatePointer(isInPointingPose, pressingStick, stickInput);
         }
 
         /// <summary>
@@ -258,6 +262,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             ApplyHandMaterial();
         }
 
+        /// <summary>
+        /// Updates hand material set on hand renderers with member variable stored on controller.
+        /// </summary>
         public void ApplyHandMaterial()
         {
             foreach (var handRenderer in handRenderers)

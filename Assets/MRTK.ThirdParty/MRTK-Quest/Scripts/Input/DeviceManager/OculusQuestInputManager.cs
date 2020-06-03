@@ -248,13 +248,16 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 controller.InputSource.Pointers[i].Controller = controller;
             }
 
-            if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
+            if (MixedRealityToolkit.IsTeleportSystemEnabled)
             {
-                pointer = GameObject.Instantiate(MRTKOculusConfig.Instance.CustomTeleportPrefab).GetComponent<CustomTeleportPointer>();
-                teleportPointers.Add(handedness, pointer);
+                if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
+                {
+                    pointer = GameObject.Instantiate(MRTKOculusConfig.Instance.CustomTeleportPrefab).GetComponent<CustomTeleportPointer>();
+                    teleportPointers.Add(handedness, pointer);
+                }
+                pointer.Controller = controller;
+                controller.TeleportPointer = pointer;
             }
-            pointer.Controller = controller;
-            controller.TeleportPointer = pointer;
 
             inputSystem?.RaiseSourceDetected(controller.InputSource, controller);
 
@@ -291,8 +294,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             if (teleportPointers.TryGetValue(controller.ControllerHandedness, out CustomTeleportPointer pointer))
             {
-                pointer.IsActive = false;
-                pointer.Controller = null;
+                pointer.Reset();
                 controller.TeleportPointer = null;
             }
 

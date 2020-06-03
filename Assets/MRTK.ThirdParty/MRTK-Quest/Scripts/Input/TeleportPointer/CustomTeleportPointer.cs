@@ -28,7 +28,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
@@ -114,6 +113,8 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         [Tooltip("Layers that are considered 'valid' for navigation")]
         protected LayerMask ValidLayers = UnityPhysics.DefaultRaycastLayers;
 
+        private LayerMask[] validRayCastLayers;
+
         [SerializeField]
         [Tooltip("Layers that are considered 'invalid' for navigation")]
         protected LayerMask InvalidLayers = UnityPhysics.IgnoreRaycastLayer;
@@ -127,9 +128,8 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// </summary>
         public DistorterGravity GravityDistorter => gravityDistorter;
 
-        private float cachedInputThreshold = 0f;
-
-        private float inputThresholdSquared = 0f;
+        private float cachedInputThreshold;
+        private float inputThresholdSquared;
 
         /// <summary>
         /// The square of the InputThreshold value.
@@ -149,21 +149,17 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         private Vector2 currentInputPosition = Vector2.zero;
 
-        protected bool isTeleportRequestActive = false;
+        protected bool isTeleportRequestActive;
 
         private bool lateRegisterTeleport = true;
 
-        private bool canTeleport = false;
+        private bool canTeleport;
 
-        private bool canMove = false;
+        private bool canMove;
 
         // private Handedness pointerHandedness = Handedness.None;
 
         #region Line Management
-
-        private Vector3 lineStartPoint;
-        private Vector3 lineEndPoint;
-
         [SerializeField]
         protected Gradient LineColorSelected = new Gradient();
 
@@ -201,7 +197,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         [Range(1, 50)]
         [SerializeField]
-        [Tooltip("Number of ray steps to utilize in raycast operation along curve defined in LineBase. This setting has a high performance cost. Values above 20 are not recommended.")]
+        [Tooltip("Number of rayStep steps to utilize in raycast operation along curve defined in LineBase. This setting has a high performance cost. Values above 20 are not recommended.")]
         protected int LineCastResolution = 10;
 
         protected Gradient GetLineGradient(TeleportSurfaceResult targetResult)
@@ -399,7 +395,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         public IPointerResult Result { get; set; }
 
         /// <summary>
-        /// Ray stabilizer used when calculating position of pointer end point.
+        /// RayStep stabilizer used when calculating position of pointer end point.
         /// </summary>
         public IBaseRayStabilizer RayStabilizer { get; set; }
 
@@ -417,7 +413,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         protected void OnEnable()
         {
             // Disable renderers so that they don't display before having been processed (which manifests as a flash at the origin).
-            var renderers = GetComponentsInChildren<Renderer>();
+            var renderers = GetComponents<Renderer>();
             if (renderers != null)
             {
                 foreach (var renderer in renderers)
@@ -425,8 +421,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     renderer.enabled = false;
                 }
             }
-
-            //SetCursor();
 
             CheckInitialization();
 
@@ -443,6 +437,8 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         private void CheckInitialization()
         {
+            validRayCastLayers = new LayerMask[] {ValidLayers};
+
             if (parabolicLineData == null)
             {
                 parabolicLineData = gameObject.GetComponent<ParabolaPhysicalLineDataProvider>();
@@ -526,34 +522,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         protected void OnDisable()
         {
-            //base.OnDisable();
-
             for (int i = 0; i < lineRenderers.Length; i++)
             {
                 lineRenderers[i].enabled = false;
             }
-            /*
-            IsHoldPressed = false;
-            IsSelectPressed = false;
-            HasSelectPressedOnce = false;
-            BaseCursor?.SetVisibility(false);
-
-            BaseCursor c = BaseCursor as BaseCursor;
-            if (c != null)
-            {
-                c.VisibleSourcesCount--;
-            }
-
-            // Need to destroy instantiated cursor prefab if it was added by the controller itself in 'OnEnable'
-            if (isCursorInstantiatedFromPrefab)
-            {
-                // Manually reset base cursor before destroying it
-                BaseCursor?.Destroy();
-                DestroyCursorInstance();
-                isCursorInstantiatedFromPrefab = false;
-            }
-
-            */
             CoreServices.TeleportSystem?.UnregisterHandler<IMixedRealityTeleportHandler>(this);
         }
 
@@ -634,9 +606,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         protected void SetLinePoints(Vector3 startPoint, Vector3 endPoint)
         {
-            lineStartPoint = startPoint;
-            lineEndPoint = endPoint;
-
             lineBase.FirstPoint = startPoint;
             lineBase.LastPoint = endPoint;
         }
@@ -644,15 +613,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// <inheritdoc />
         public void OnPostSceneQuery()
         {
-            /*
-            if (IsSelectPressed)
-            {
-                CoreServices.InputSystem.RaisePointerDragged(this, MixedRealityInputAction.None, pointerHandedness);
-            }
-            */
-
             // Use the results from the last update to set our NavigationResult
-            float clearWorldLength = 0f;
             TeleportSurfaceResult = TeleportSurfaceResult.None;
             GravityDistorter.enabled = false;
 
@@ -676,11 +637,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         }
                         else
                         {
-                            // If it's NOT a hotspot, check if the hit normal is too steep
-                            // (Hotspots override dot requirements)
-                            TeleportSurfaceResult = Vector3.Dot(Result.Details.LastRaycastHit.normal, Vector3.up) > upDirectionThreshold
-                                ? TeleportSurfaceResult.Valid
-                                : TeleportSurfaceResult.Invalid;
+                            TeleportSurfaceResult = TeleportSurfaceResult.Invalid;
                         }
                     }
                     else if (((1 << Result.CurrentPointerTarget.layer) & InvalidLayers) != 0)
@@ -692,7 +649,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         TeleportSurfaceResult = TeleportSurfaceResult.None;
                     }
 
-                    clearWorldLength = Result.Details.RayDistance;
+                    var clearWorldLength = Result.Details.RayDistance;
 
                     // Clamp the end of the parabola to the result hit's point
                     LineBase.LineEndClamp = LineBase.GetNormalizedLengthFromWorldLength(clearWorldLength, LineCastResolution);
@@ -722,84 +679,76 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         {
             IsActive = false;
             IsFocusLocked = false;
+            Controller = null;
+        }
+
+        protected void DoSceneQuery()
+        {
+            if (!IsActive) return;
+            TeleportPointerData pointerData = new TeleportPointerData();
+            TeleportPointerHitResult hitResult = new TeleportPointerHitResult();
+
+            float rayStartDistance = 0;
+            for (int i = 0; i < Rays.Length; i++)
+            {
+                if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], validRayCastLayers, true, out MixedRealityRaycastHit hitInfo))
+                {
+                    hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
+                    break;
+                }
+                rayStartDistance += Rays[i].Length;
+            }
+
+            pointerData.UpdateHit(this, hitResult);
+            Result = pointerData;
+
+            if (Result.CurrentPointerTarget != null)
+            {
+                TeleportHotSpot = new CustomTeleportHotspot
+                {
+                    Normal = Result.Details.Normal,
+                    Position = Result.Details.Point
+                };
+            }
+            else if (TeleportHotSpot != null)
+            {
+                TeleportHotSpot = null;
+            }
         }
 
         #endregion IMixedRealityPointer Implementation
 
         #region IMixedRealityInputHandler Implementation
 
-        private LayerMask[] GetLayerMaskLayers(LayerMask layers)
-        {
-            int x = (int)layers;
-            List<LayerMask> flags = new List<LayerMask>();
-            for (int i = 1; i < (1 << 30); i <<= 1)
-            {
-                if ((x & i) != 0)
-                {
-                    flags.Add(i);
-                }
-            }
-            return flags.ToArray();
-        }
-
+        /// <summary>
+        /// Updates
+        /// </summary>
+        /// <param name="isPressing"></param>
+        /// <param name="isActive"></param>
+        /// <param name="teleportDirection"></param>
         public void UpdatePointer(bool isPressing, bool isActive, Vector2 teleportDirection)
         {
             IsActive = isActive;
-            IsFocusLocked = isPressing;
 
             // Call the pointer's OnPreSceneQuery function
             // This will give it a chance to prepare itself for raycasts
             // e.g., by building its Rays array
             OnPreSceneQuery();
 
-            if (IsActive)
-            {
-                TeleportPointerData pointerData = new TeleportPointerData();
-                TeleportPointerHitResult hitResult = new TeleportPointerHitResult();
-
-                float rayStartDistance = 0;
-                for (int i = 0; i < Rays.Length; i++)
-                {
-                    if (UnityEngine.Physics.Raycast(Rays[i].Origin, Rays[i].Direction, out RaycastHit rayCastHitResult, Rays[i].Length, ValidLayers))
-                    //if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], GetLayerMaskLayers(ValidLayers), true, out MixedRealityRaycastHit hitInfo))
-                    {
-                        MixedRealityRaycastHit hitInfo = new MixedRealityRaycastHit(true, rayCastHitResult);
-                        //UnityEngine.Debug.Log(rayCastHitResult.collider.gameObject);
-                        hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
-                        break;
-                    }
-                    rayStartDistance += Rays[i].Length;
-                }
-
-                pointerData.UpdateHit(this, hitResult);
-                Result = pointerData;
-
-                if (Result.CurrentPointerTarget != null)
-                {
-                    TeleportHotSpot = new CustomTeleportHotspot
-                    {
-                        Normal = Result.Details.Normal,
-                        Position = Result.Details.Point
-                    };
-                }
-                else if (TeleportHotSpot != null)
-                {
-                    TeleportHotSpot = null;
-                }
-            }
+            DoSceneQuery();
 
             // Call the pointer's OnPostSceneQuery function.
             // This will give it a chance to respond to raycast results
             // e.g., by updating its appearance.
             OnPostSceneQuery();
 
+            // Check input changed
             if (currentInputPosition != teleportDirection)
             {
                 OnInputChanged(teleportDirection);
             }
         }
 
-        /// <inheritdoc />
         private void OnInputChanged(Vector2 newInputSource)
         {
             // Don't process input if we've got an active teleport request in progress.
@@ -960,12 +909,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         #endregion IMixedRealityTeleportHandler Implementation
 
         #region IEquality Implementation
-
-        private static bool Equals(IMixedRealityPointer left, IMixedRealityPointer right)
-        {
-            return left.Equals(right);
-        }
-
         /// <inheritdoc />
         bool IEqualityComparer.Equals(object left, object right)
         {
@@ -1010,6 +953,9 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region Helper Classes
 
+        /// <summary>
+        /// Given that hotspots are the only way to teleport, we use a custom hotspot that moves along with the hit point.
+        /// </summary>
         private class CustomTeleportHotspot : IMixedRealityTeleportHotSpot
         {
             public Vector3 Position { get; set; }
@@ -1020,10 +966,13 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             public GameObject GameObjectReference { get; set; } = null;
         }
 
+        /// <summary>
+        /// Data result from pointer hit test.
+        /// </summary>
         private class TeleportPointerData : IPointerResult
         {
             public Vector3 StartPoint { get; private set; }
-            public FocusDetails Details { get; private set; } = new FocusDetails();
+            public FocusDetails Details { get; private set; }
             public GameObject CurrentPointerTarget { get; private set; }
             public GameObject PreviousPointerTarget { get; private set; }
             public int RayStepIndex { get; private set; }
@@ -1041,18 +990,18 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 Vector3 hitPointOnObject;
                 Vector3 hitNormalOnObject;
 
-                if (hitResult.rayStepIndex >= 0)
+                if (hitResult.RayStepIndex >= 0)
                 {
-                    RayStepIndex = hitResult.rayStepIndex;
-                    StartPoint = hitResult.ray.Origin;
+                    RayStepIndex = hitResult.RayStepIndex;
+                    StartPoint = hitResult.RayStep.Origin;
 
-                    rayDistance = hitResult.rayDistance;
+                    rayDistance = hitResult.RayDistance;
                     hitPointOnObject = hitResult.hitPointOnObject;
                     hitNormalOnObject = hitResult.hitNormalOnObject;
                 }
                 else
                 {
-                    // If we don't have a valid ray cast, use the whole pointer ray.
+                    // If we don't have a valid rayStep cast, use the whole pointer rayStep.
                     RayStep firstStep = teleportPointer.Rays[0];
                     RayStep finalStep = teleportPointer.Rays[teleportPointer.Rays.Length - 1];
                     RayStepIndex = 0;
@@ -1117,45 +1066,14 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             public Vector3 hitPointOnObject = Vector3.zero;
             public Vector3 hitNormalOnObject = Vector3.zero;
 
-            public RayStep ray;
-            public int rayStepIndex = -1;
-            public float rayDistance;
-
-            public void Clear()
-            {
-                raycastHit = default(MixedRealityRaycastHit);
-                graphicsRaycastResult = default(RaycastResult);
-
-                hitObject = null;
-                hitPointOnObject = Vector3.zero;
-                hitNormalOnObject = Vector3.zero;
-
-                ray = default(RayStep);
-                rayStepIndex = -1;
-                rayDistance = 0.0f;
-            }
-
-            /// <summary>
-            /// Set hit focus information from a closest-colliders-to pointer check.
-            /// </summary>
-            public void Set(GameObject hitObject, Vector3 hitPointOnObject, Vector4 hitNormalOnObject, RayStep ray, int rayStepIndex, float rayDistance)
-            {
-                raycastHit = default(MixedRealityRaycastHit);
-                graphicsRaycastResult = default(RaycastResult);
-
-                this.hitObject = hitObject;
-                this.hitPointOnObject = hitPointOnObject;
-                this.hitNormalOnObject = hitNormalOnObject;
-
-                this.ray = ray;
-                this.rayStepIndex = rayStepIndex;
-                this.rayDistance = rayDistance;
-            }
+            public RayStep RayStep;
+            public int RayStepIndex = -1;
+            public float RayDistance;
 
             /// <summary>
             /// Set hit focus information from a physics raycast.
             /// </summary>
-            public void Set(MixedRealityRaycastHit hit, RayStep ray, int rayStepIndex, float rayDistance, bool focusIndividualCompoundCollider)
+            public void Set(MixedRealityRaycastHit hit, RayStep rayStep, int rayStepIndex, float rayDistance, bool focusIndividualCompoundCollider)
             {
                 raycastHit = hit;
                 graphicsRaycastResult = default(RaycastResult);
@@ -1164,32 +1082,9 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 hitPointOnObject = hit.point;
                 hitNormalOnObject = hit.normal;
 
-                this.ray = ray;
-                this.rayStepIndex = rayStepIndex;
-                this.rayDistance = rayDistance;
-            }
-
-            /// <summary>
-            /// Set hit information from a canvas raycast.
-            /// </summary>
-            public void Set(RaycastResult result, Vector3 hitPointOnObject, Vector4 hitNormalOnObject, RayStep ray, int rayStepIndex, float rayDistance)
-            {
-                raycastHit = default(MixedRealityRaycastHit);
-                raycastHit.point = hitPointOnObject;
-                raycastHit.normal = hitNormalOnObject;
-                raycastHit.distance = rayDistance;
-                raycastHit.transform = result.gameObject.transform;
-                raycastHit.raycastValid = true;
-
-                graphicsRaycastResult = result;
-
-                this.hitObject = result.gameObject;
-                this.hitPointOnObject = hitPointOnObject;
-                this.hitNormalOnObject = hitNormalOnObject;
-
-                this.ray = ray;
-                this.rayStepIndex = rayStepIndex;
-                this.rayDistance = rayDistance;
+                RayStep = rayStep;
+                RayStepIndex = rayStepIndex;
+                RayDistance = rayDistance;
             }
         }
 
