@@ -296,7 +296,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         public ICursorModifier CursorModifier { get; set; }
 
         /// <inheritdoc />
-        public bool IsInteractionEnabled => !isTeleportRequestActive && TeleportRequestRaised && MixedRealityToolkit.IsTeleportSystemEnabled;
+        public bool IsInteractionEnabled => IsActive && !isTeleportRequestActive && TeleportRequestRaised && MixedRealityToolkit.IsTeleportSystemEnabled;
 
         public bool IsActive { get; set; }
 
@@ -682,6 +682,13 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         public void Reset()
         {
+            if (gameObject == null) return;
+
+            if(TeleportHotSpot != null)
+            {
+                CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
+                TeleportHotSpot = null;
+            }
             OnInputChanged(Vector2.zero);
             IsActive = false;
             IsFocusLocked = false;
@@ -730,11 +737,14 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// <summary>
         /// Updates
         /// </summary>
-        /// <param name="isPressing"></param>
         /// <param name="isActive"></param>
         /// <param name="teleportDirection"></param>
-        public void UpdatePointer(bool isPressing, bool isActive, Vector2 teleportDirection)
+        public void UpdatePointer(bool isActive, Vector2 teleportDirection)
         {
+            if (IsActive && !isActive && TeleportHotSpot != null)
+            {
+                CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
+            }
             IsActive = isActive;
 
             // Call the pointer's OnPreSceneQuery function

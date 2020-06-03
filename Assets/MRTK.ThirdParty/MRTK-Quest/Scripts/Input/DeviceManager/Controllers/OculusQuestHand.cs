@@ -32,6 +32,7 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
 using prvncher.MixedReality.Toolkit.Input.Teleport;
+using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
 using static OVRSkeleton;
 
@@ -61,6 +62,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private Material handMaterial = null;
         private Renderer handRenderer = null;
+
+        private bool isIndexGrabbing = false;
+        private bool isMiddleGrabbing = false;
 
         // TODO: Hand mesh
         // private int[] handMeshTriangleIndices = null;
@@ -148,7 +152,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 Vector3 projectedPalmUp = Vector3.ProjectOnPlane(-palmPose.Up, cameraTransform.up);
 
                 // We check if the palm forward is roughly in line with the camera lookAt
-                return Vector3.Dot(cameraTransform.forward, projectedPalmUp) > 0.3f;
+                return Vector3.Dot(cameraTransform.forward, projectedPalmUp) > 0.3f && Vector3.Dot(-palmPose.Up, Vector3.up) < 0.5f;
             }
         }
 
@@ -250,27 +254,33 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             if (TeleportPointer == null) return;
 
+            // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
             bool anyPointersLockedWithHand = false;
             for (int i = 0; i < InputSource?.Pointers?.Length; i++)
             {
-                if (InputSource.Pointers[i] == null ) continue;
+                if (InputSource.Pointers[i] == null) continue;
                 if (InputSource.Pointers[i] is IMixedRealityNearPointer)
                 {
-                    var nearPointer = (IMixedRealityNearPointer) InputSource.Pointers[i];
+                    var nearPointer = (IMixedRealityNearPointer)InputSource.Pointers[i];
                     anyPointersLockedWithHand |= nearPointer.IsNearObject;
                 }
+                anyPointersLockedWithHand |= InputSource.Pointers[i].IsFocusLocked;
             }
 
+            // We close middle finger to signal spider-man gesture, and as being ready for teleport
+            bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose &&
+                                      isMiddleGrabbing;
+
             Vector2 stickInput = Vector2.zero;
-            if (!anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose && IsPinching)
+            if (isReadyForTeleport && !IsPinching)
             {
                 stickInput = Vector2.up;
             }
 
-            TeleportPointer.gameObject.SetActive(IsPositionAvailable && !IsInPointingPose);
             TeleportPointer.transform.position = worldPosition;
             TeleportPointer.transform.rotation = worldRotation;
-            TeleportPointer.UpdatePointer(!IsInPointingPose, !IsInPointingPose, stickInput);
+            TeleportPointer.UpdatePointer(isReadyForTeleport, stickInput);
+            TeleportPointer.gameObject.SetActive(isReadyForTeleport);
         }
 
         #region HandJoints
@@ -378,9 +388,16 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
             }
 
+
+            isIndexGrabbing = HandPoseUtils.IsIndexGrabbing(ControllerHandedness);
+            isMiddleGrabbing = HandPoseUtils.IsMiddleGrabbing(ControllerHandedness);
+
             // Pinch was also used as grab, we want to allow hand-curl grab not just pinch.
             // Determine pinch and grab separately
-            CheckIfJointPosesGrabbing();
+            if (isTracked)
+            {
+                IsGrabbing = isIndexGrabbing && isMiddleGrabbing;
+            }
 
             if (MRTKOculusConfig.Instance.UpdateMaterialPinchStrengthValue && handMaterial != null)
             {
@@ -390,26 +407,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
                 handMaterial.SetFloat(pinchStrengthProp, pinchStrength);
             }
-
             return isTracked;
-        }
-
-        protected void CheckIfJointPosesGrabbing()
-        {
-            MixedRealityPose wristPose, indexKnucklePose, indexTipPose;
-            if (jointPoses.TryGetValue(TrackedHandJoint.Wrist, out wristPose))
-            {
-                if (jointPoses.TryGetValue(TrackedHandJoint.IndexTip, out indexTipPose))
-                {
-                    if (jointPoses.TryGetValue(TrackedHandJoint.IndexKnuckle, out indexKnucklePose))
-                    {
-                        // compare wrist-knuckle to wrist-tip
-                        Vector3 wristToIndexTip = indexTipPose.Position - wristPose.Position;
-                        Vector3 wristToIndexKnuckle = indexKnucklePose.Position - wristPose.Position;
-                        IsGrabbing = wristToIndexKnuckle.sqrMagnitude >= wristToIndexTip.sqrMagnitude;
-                    }
-                }
-            }
         }
 
         // 4 cm is the treshold for fingers being far apart.

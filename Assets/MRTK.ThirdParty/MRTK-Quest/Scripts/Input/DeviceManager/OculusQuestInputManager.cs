@@ -294,10 +294,16 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             if (teleportPointers.TryGetValue(controller.ControllerHandedness, out CustomTeleportPointer pointer))
             {
-                pointer.Reset();
+                if (pointer == null)
+                {
+                    teleportPointers.Remove(controller.ControllerHandedness);
+                }
+                else
+                {
+                    pointer.Reset();
+                }
                 controller.TeleportPointer = null;
             }
-
             RecyclePointers(controller.InputSource);
         }
         #endregion
@@ -416,7 +422,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             if (teleportPointers.TryGetValue(hand.ControllerHandedness, out CustomTeleportPointer pointer))
             {
-                pointer.Reset();
+                if (pointer == null)
+                {
+                    teleportPointers.Remove(hand.ControllerHandedness);
+                }
+                else
+                {
+                    pointer.Reset();
+                }
                 hand.TeleportPointer = null;
             }
 

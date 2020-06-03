@@ -241,6 +241,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             if (TeleportPointer == null) return;
 
+            // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
             bool anyPointersLockedWithHand = false;
             for (int i = 0; i < InputSource?.Pointers?.Length; i++)
             {
@@ -250,15 +251,16 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     var nearPointer = (IMixedRealityNearPointer)InputSource.Pointers[i];
                     anyPointersLockedWithHand |= nearPointer.IsNearObject;
                 }
+                anyPointersLockedWithHand |= InputSource.Pointers[i].IsFocusLocked;
             }
 
-            bool pressingStick = anyPointersLockedWithHand && stickInput != Vector2.zero;
+            bool pressingStick = !anyPointersLockedWithHand && stickInput != Vector2.zero;
             isInPointingPose = !pressingStick;
 
             TeleportPointer.gameObject.SetActive(IsPositionAvailable);
             TeleportPointer.transform.position = worldPosition;
             TeleportPointer.transform.rotation = worldRotation;
-            TeleportPointer.UpdatePointer(isInPointingPose, pressingStick, stickInput);
+            TeleportPointer.UpdatePointer(pressingStick, stickInput);
         }
 
         /// <summary>
