@@ -613,11 +613,16 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// <inheritdoc />
         public void OnPostSceneQuery()
         {
+            if (currentInputPosition != Vector2.zero && Controller != null)
+            {
+                CoreServices.InputSystem.RaisePointerDragged(this, MixedRealityInputAction.None, Controller.ControllerHandedness);
+            }
+
             // Use the results from the last update to set our NavigationResult
             TeleportSurfaceResult = TeleportSurfaceResult.None;
             GravityDistorter.enabled = false;
 
-            if (IsInteractionEnabled)
+            if (IsInteractionEnabled && Result != null)
             {
                 LineBase.enabled = true;
 
@@ -677,9 +682,11 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         public void Reset()
         {
+            OnInputChanged(Vector2.zero);
             IsActive = false;
             IsFocusLocked = false;
             Controller = null;
+            gameObject.SetActive(false);
         }
 
         protected void DoSceneQuery()

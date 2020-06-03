@@ -151,7 +151,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         protected void UpdateCursorTransform()
         {
             transform.position = pointer.Result.Details.Point;
-            UnityEngine.Debug.Log(pointer.Result.Details.Point);
 
             Vector3 forward = CameraCache.Main.transform.forward;
             forward.y = 0f;

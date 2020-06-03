@@ -31,6 +31,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+using prvncher.MixedReality.Toolkit.Input.Teleport;
 using UnityEngine;
 using static OVRSkeleton;
 
@@ -40,6 +41,11 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
     public class OculusQuestHand : BaseHand, IMixedRealityHand
     {
         private MixedRealityPose currentPointerPose = MixedRealityPose.ZeroIdentity;
+
+        /// <summary>
+        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
+        /// </summary>
+        public CustomTeleportPointer TeleportPointer { get; set; }
 
         /// <summary>
         /// Pose used by hand ray
@@ -183,6 +189,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 UpdateVelocity();
             }
 
+            UpdateCustomTeleportPointer(currentPointerPose.Position, currentPointerPose.Rotation);
+
             for (int i = 0; i < Interactions?.Length; i++)
             {
                 switch (Interactions[i].InputType)
@@ -236,6 +244,33 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         break;
                 }
             }
+        }
+
+        private void UpdateCustomTeleportPointer(Vector3 worldPosition, Quaternion worldRotation)
+        {
+            if (TeleportPointer == null) return;
+
+            bool anyPointersLockedWithHand = false;
+            for (int i = 0; i < InputSource?.Pointers?.Length; i++)
+            {
+                if (InputSource.Pointers[i] == null ) continue;
+                if (InputSource.Pointers[i] is IMixedRealityNearPointer)
+                {
+                    var nearPointer = (IMixedRealityNearPointer) InputSource.Pointers[i];
+                    anyPointersLockedWithHand |= nearPointer.IsNearObject;
+                }
+            }
+
+            Vector2 stickInput = Vector2.zero;
+            if (!anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose && IsPinching)
+            {
+                stickInput = Vector2.up;
+            }
+
+            TeleportPointer.gameObject.SetActive(IsPositionAvailable && !IsInPointingPose);
+            TeleportPointer.transform.position = worldPosition;
+            TeleportPointer.transform.rotation = worldRotation;
+            TeleportPointer.UpdatePointer(!IsInPointingPose, !IsInPointingPose, stickInput);
         }
 
         #region HandJoints

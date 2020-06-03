@@ -43,6 +43,10 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
+
+        /// <summary>
+        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
+        /// </summary>
         public CustomTeleportPointer TeleportPointer { get; set; }
 
         private List<Renderer> handRenderers = new List<Renderer>();
@@ -237,7 +241,18 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             if (TeleportPointer == null) return;
 
-            bool pressingStick = stickInput != Vector2.zero;
+            bool anyPointersLockedWithHand = false;
+            for (int i = 0; i < InputSource?.Pointers?.Length; i++)
+            {
+                if (InputSource.Pointers[i] == null) continue;
+                if (InputSource.Pointers[i] is IMixedRealityNearPointer)
+                {
+                    var nearPointer = (IMixedRealityNearPointer)InputSource.Pointers[i];
+                    anyPointersLockedWithHand |= nearPointer.IsNearObject;
+                }
+            }
+
+            bool pressingStick = anyPointersLockedWithHand && stickInput != Vector2.zero;
             isInPointingPose = !pressingStick;
 
             TeleportPointer.gameObject.SetActive(IsPositionAvailable);
