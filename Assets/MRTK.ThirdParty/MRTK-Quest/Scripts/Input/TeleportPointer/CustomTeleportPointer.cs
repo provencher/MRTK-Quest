@@ -309,10 +309,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         [Tooltip("The Y orientation of the pointer - used for rotation and navigation")]
         private float pointerOrientation = 0f;
 
-        /// <summary>
-        /// Sets pointer pose used to compute teleport direction
-        /// </summary>
-        public MixedRealityPose PointerPose { get; private set; }
 
         /// <inheritdoc />
         public float PointerOrientation
@@ -326,8 +322,9 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     return TeleportHotSpot.TargetOrientation;
                 }
 
-                return PointerPose.Rotation.eulerAngles.y;
-                //return pointerOrientation + (PointerRotation?.eulerAngles.y ?? transform.eulerAngles.y);
+                //return PointerPose.Rotation.eulerAngles.y;
+                //return pointerOrientation + (Rotation.eulerAngles.y ?? transform.eulerAngles.y);
+                return pointerOrientation + Rotation.eulerAngles.y;
             }
             set
             {
@@ -755,27 +752,41 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             // e.g., by building its Rays array
             OnPreSceneQuery();
 
-            TeleportPointerData pointerData = new TeleportPointerData();
-            TeleportPointerHitResult hitResult = new TeleportPointerHitResult();
-
-            float rayStartDistance = 0;
-            for (int i = 0; i < Rays.Length; i++)
+            if (IsActive)
             {
-                if (UnityEngine.Physics.Raycast(Rays[i].Origin, Rays[i].Direction, out RaycastHit rayCastHitResult, Rays[i].Length, ValidLayers))
-                //if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], GetLayerMaskLayers(ValidLayers), true, out MixedRealityRaycastHit hitInfo))
+                TeleportPointerData pointerData = new TeleportPointerData();
+                TeleportPointerHitResult hitResult = new TeleportPointerHitResult();
+
+                float rayStartDistance = 0;
+                for (int i = 0; i < Rays.Length; i++)
                 {
-                    MixedRealityRaycastHit hitInfo = new MixedRealityRaycastHit( true, rayCastHitResult);
-                    //UnityEngine.Debug.Log(rayCastHitResult.collider.gameObject);
-                    hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
-                    break;
+                    if (UnityEngine.Physics.Raycast(Rays[i].Origin, Rays[i].Direction, out RaycastHit rayCastHitResult, Rays[i].Length, ValidLayers))
+                    //if (CoreServices.InputSystem.RaycastProvider.Raycast(Rays[i], GetLayerMaskLayers(ValidLayers), true, out MixedRealityRaycastHit hitInfo))
+                    {
+                        MixedRealityRaycastHit hitInfo = new MixedRealityRaycastHit(true, rayCastHitResult);
+                        //UnityEngine.Debug.Log(rayCastHitResult.collider.gameObject);
+                        hitResult.Set(hitInfo, Rays[i], i, rayStartDistance + hitInfo.distance, true);
+                        break;
+                    }
+                    rayStartDistance += Rays[i].Length;
                 }
-                rayStartDistance += Rays[i].Length;
+
+                pointerData.UpdateHit(this, hitResult);
+                Result = pointerData;
+
+                if (Result.CurrentPointerTarget != null)
+                {
+                    TeleportHotSpot = new CustomTeleportHotspot
+                    {
+                        Normal = Result.Details.Normal,
+                        Position = Result.Details.Point
+                    };
+                }
+                else if (TeleportHotSpot != null)
+                {
+                    TeleportHotSpot = null;
+                }
             }
-
-            pointerData.UpdateHit(this, hitResult);
-            Result = pointerData;
-
-            UnityEngine.Debug.Log(Result.CurrentPointerTarget);
 
             // Call the pointer's OnPostSceneQuery function.
             // This will give it a chance to respond to raycast results
@@ -998,6 +1009,16 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
 
         #region Helper Classes
+
+        private class CustomTeleportHotspot : IMixedRealityTeleportHotSpot
+        {
+            public Vector3 Position { get; set; }
+            public Vector3 Normal { get; set; }
+            public bool IsActive { get; } = true;
+            public bool OverrideTargetOrientation { get; } = false;
+            public float TargetOrientation { get; } = 0f;
+            public GameObject GameObjectReference { get; set; } = null;
+        }
 
         private class TeleportPointerData : IPointerResult
         {

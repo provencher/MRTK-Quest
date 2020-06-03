@@ -229,14 +229,15 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         break;
                 }
 
-                isInPointingPose = TeleportPointer == null || stickInput == Vector2.zero;
+                bool pressingStick = stickInput != Vector2.zero;
+                isInPointingPose = TeleportPointer == null || !pressingStick;
 
                 if (TeleportPointer != null)
                 {
                     TeleportPointer.gameObject.SetActive(IsPositionAvailable);
                     TeleportPointer.transform.position = worldPosition;
                     TeleportPointer.transform.rotation = worldRotation;
-                    TeleportPointer.UpdatePointer(isInPointingPose, IsPositionAvailable, stickInput);
+                    TeleportPointer.UpdatePointer(isInPointingPose, pressingStick, stickInput);
                 }
             }
         }
