@@ -534,16 +534,23 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region IMixedRealityPointer Implementation
 
+
+        private StabilizedRay stabilizedRay = new StabilizedRay(0.5f);
+        private Ray stabilizationRay = new Ray();
         /// <inheritdoc />
         public void OnPreSceneQuery()
         {
+            stabilizationRay.origin = transform.position;
+            stabilizationRay.direction = transform.forward;
+            stabilizedRay.AddSample(stabilizationRay);
+
             parabolicLineData.LineTransform.rotation = Quaternion.identity;
-            parabolicLineData.Direction = transform.forward;
+            parabolicLineData.Direction = stabilizedRay.StabilizedDirection;
 
             // when pointing straight up, upDot should be close to 1.
             // when pointing straight down, upDot should be close to -1.
             // when pointing straight forward in any direction, upDot should be 0.
-            var upDot = Vector3.Dot(transform.forward, Vector3.up);
+            var upDot = Mathf.Clamp(Vector3.Dot(stabilizedRay.StabilizedDirection, Vector3.up) + 0.5f, -1f, 1f);
 
             var velocity = minParabolaVelocity;
             var distance = minDistanceModifier;
