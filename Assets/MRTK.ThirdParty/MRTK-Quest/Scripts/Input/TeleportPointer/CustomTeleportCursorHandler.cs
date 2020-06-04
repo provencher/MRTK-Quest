@@ -47,11 +47,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         private Vector3 cursorOrientation = Vector3.zero;
 
         [SerializeField]
-        [Header("Animated Cursor State Data")]
-        [Tooltip("Cursor state data to use for its various states.")]
-        private AnimatedCursorStateData[] cursorStateData = null;
-
-        [SerializeField]
         [Tooltip("Animator for the cursor")]
         private Animator cursorAnimator = null;
 
@@ -64,10 +59,13 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         protected Transform PrimaryCursorVisual = null;
 
         [SerializeField]
+        [Tooltip("Ring visual on cursor")]
+        protected Transform RingCursorVisual = null;
+
+        [SerializeField]
         [Tooltip("Arrow Transform to point in the Teleporting direction.")]
         private Transform arrowTransform = null;
 
-        private List<Renderer> renderers;
 
         #region IMixedRealityCursor Implementation
 
@@ -82,37 +80,37 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         public CursorStateEnum CursorState { get; private set; } = CursorStateEnum.None;
 
+        private float scaleTarget = 0f;
+        private float scaleOrigin = 0f;
+        private Vector3 startScale = Vector3.one;
+        private float scaleSmoothTime = 0f;
+
         /// <inheritdoc />
         public CursorStateEnum CheckCursorState()
         {
-            if (CursorState != CursorStateEnum.Contextual)
+            if (pointer.IsInteractionEnabled)
             {
-                if (pointer.IsInteractionEnabled)
+                switch (pointer.TeleportSurfaceResult)
                 {
-                    switch (pointer.TeleportSurfaceResult)
-                    {
-                        case TeleportSurfaceResult.None:
-                            return CursorStateEnum.Release;
-                        case TeleportSurfaceResult.Invalid:
-                            return CursorStateEnum.ObserveHover;
-                        case TeleportSurfaceResult.HotSpot:
-                        case TeleportSurfaceResult.Valid:
-                            return CursorStateEnum.ObserveHover;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                    case TeleportSurfaceResult.None:
+                        return CursorStateEnum.Release;
+                    case TeleportSurfaceResult.Invalid:
+                        return CursorStateEnum.Observe;
+                    case TeleportSurfaceResult.HotSpot:
+                    case TeleportSurfaceResult.Valid:
+                        return CursorStateEnum.ObserveHover;
+                    default:
+                        break;
                 }
-
-                return CursorStateEnum.Release;
             }
-            return CursorStateEnum.Contextual;
+            return CursorStateEnum.Release;
         }
 
         private bool CanUpdateCursor => pointer.IsActive && pointer.IsInteractionEnabled && pointer.Result != null;
 
-        private void Start()
+        private void Awake()
         {
-            renderers = new List<Renderer>(GetComponentsInChildren<Renderer>());
+            startScale = PrimaryCursorVisual.localScale;
         }
 
         private void Update()
@@ -120,18 +118,20 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             if (!CanUpdateCursor)
             {
                 SetRenderersActive(false);
+                OnCursorStateChange(CursorStateEnum.Release);
                 return;
             }
-            SetRenderersActive(true);
+
             UpdateCursorState();
+            SetRenderersActive(true);
             UpdateCursorTransform();
         }
 
         private void SetRenderersActive(bool isActive)
         {
-            foreach (var renderer in renderers)
+            if (PrimaryCursorVisual != null)
             {
-                renderer.enabled = isActive;
+                PrimaryCursorVisual.gameObject.SetActive(isActive);
             }
         }
 
@@ -158,6 +158,15 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             // Smooth out rotation just a tad to prevent jarring transitions
             PrimaryCursorVisual.rotation = Quaternion.Lerp(PrimaryCursorVisual.rotation, Quaternion.LookRotation(forward.normalized, Vector3.up), 0.5f);
 
+            // Smooth in cursor scale
+            scaleSmoothTime += Time.deltaTime * 4f;
+
+            float scaleAlpha = Mathf.SmoothStep(scaleOrigin, scaleTarget, Mathf.Clamp01(scaleSmoothTime));
+            PrimaryCursorVisual.localScale = startScale * scaleAlpha;
+
+            // Spin ring gently
+            RingCursorVisual.localRotation = Quaternion.Euler(Mathf.Repeat(Time.time * 0.25f, 1f) * Vector3.up * 360f);
+           
             // Point the arrow towards the target orientation
             cursorOrientation.y = pointer.PointerOrientation;
             arrowTransform.eulerAngles = cursorOrientation;
@@ -169,66 +178,57 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         public void OnCursorStateChange(CursorStateEnum state)
         {
             CursorState = state;
-            for (int i = 0; i < cursorStateData.Length; i++)
+            scaleSmoothTime = 0f;
+            switch (state)
             {
-                if (cursorStateData[i].CursorState == state)
-                {
-                    SetAnimatorParameter(cursorStateData[i].Parameter);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Based on the type of animator state info pass it through to the animator
-        /// </summary>
-        private void SetAnimatorParameter(AnimatorParameter animationParameter)
-        {
-            // Return if we do not have an animator
-            if (cursorAnimator == null || !cursorAnimator.isInitialized)
-            {
-                return;
-            }
-
-            switch (animationParameter.ParameterType)
-            {
-                case AnimatorControllerParameterType.Bool:
-                    cursorAnimator.SetBool(animationParameter.NameHash, animationParameter.DefaultBool);
+                case CursorStateEnum.Observe:
+                case CursorStateEnum.ObserveHover:
+                case CursorStateEnum.Interact:
+                case CursorStateEnum.InteractHover:
+                    scaleOrigin = 0f;
+                    scaleTarget = 1f;
                     break;
-                case AnimatorControllerParameterType.Float:
-                    cursorAnimator.SetFloat(animationParameter.NameHash, animationParameter.DefaultFloat);
-                    break;
-                case AnimatorControllerParameterType.Int:
-                    cursorAnimator.SetInteger(animationParameter.NameHash, animationParameter.DefaultInt);
-                    break;
-                case AnimatorControllerParameterType.Trigger:
-                    cursorAnimator.SetTrigger(animationParameter.NameHash);
+                case CursorStateEnum.None:
+                case CursorStateEnum.Release:
+                case CursorStateEnum.Contextual:
+                default:
+                    scaleOrigin = PrimaryCursorVisual.localScale.x;
+                    scaleTarget = 0f;
                     break;
             }
         }
-
         #endregion IMixedRealityCursor Implementation
 
         #region IMixedRealityTeleportHandler Implementation
 
+        private void ResetCursor()
+        {
+            PrimaryCursorVisual.localScale = Vector3.zero;
+            OnCursorStateChange(CursorStateEnum.Release);
+        }
+
         /// <inheritdoc />
         public void OnTeleportRequest(TeleportEventData eventData)
         {
-            OnCursorStateChange(CursorStateEnum.Observe);
+            ResetCursor();
         }
 
         /// <inheritdoc />
         public void OnTeleportStarted(TeleportEventData eventData)
         {
-            OnCursorStateChange(CursorStateEnum.Release);
+            ResetCursor();
         }
 
         /// <inheritdoc />
-        public void OnTeleportCompleted(TeleportEventData eventData) { }
+        public void OnTeleportCompleted(TeleportEventData eventData)
+        {
+            ResetCursor();
+        }
 
         /// <inheritdoc />
         public void OnTeleportCanceled(TeleportEventData eventData)
         {
-            OnCursorStateChange(CursorStateEnum.Release);
+            ResetCursor();
         }
         #endregion IMixedRealityTeleportHandler Implementation
     }
