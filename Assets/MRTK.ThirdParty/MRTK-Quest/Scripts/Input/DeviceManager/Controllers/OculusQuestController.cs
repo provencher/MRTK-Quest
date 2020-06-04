@@ -559,7 +559,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 // Rotate palm 180 on X to flip up
                 // Rotate palm 90 degrees on y to align x with right
-                correctedRotation *= Quaternion.Euler(180f, -90f, 0f);
+                correctedRotation *= Quaternion.Euler(180f, 90f, 0f);
             }
             else
             {
