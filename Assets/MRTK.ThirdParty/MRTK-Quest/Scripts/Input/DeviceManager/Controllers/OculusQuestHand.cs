@@ -66,10 +66,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private bool isIndexGrabbing = false;
         private bool isMiddleGrabbing = false;
 
-        // TODO: Hand mesh
-        // private int[] handMeshTriangleIndices = null;
-        // private Vector2[] handMeshUVs;
-
         private int pinchStrengthProp;
 
         /// <summary>
@@ -271,16 +267,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose &&
                                       isMiddleGrabbing;
 
-            Vector2 stickInput = Vector2.zero;
-            if (isReadyForTeleport && !IsPinching)
-            {
-                stickInput = Vector2.up;
-            }
 
+            Vector2 stickInput = isReadyForTeleport ? Vector2.up : Vector2.zero;
+
+            TeleportPointer.gameObject.SetActive(isReadyForTeleport);
             TeleportPointer.transform.position = worldPosition;
             TeleportPointer.transform.rotation = worldRotation;
-            TeleportPointer.UpdatePointer(isReadyForTeleport, stickInput);
-            TeleportPointer.gameObject.SetActive(isReadyForTeleport);
+
+            TeleportPointer.UpdatePointer(isReadyForTeleport, isIndexGrabbing ? Vector2.zero : stickInput);
         }
 
         #region HandJoints
@@ -387,7 +381,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                                  && ovrHand.GetFingerConfidence(OVRHand.HandFinger.Index) == OVRHand.TrackingConfidence.High;
                 }
             }
-
 
             isIndexGrabbing = HandPoseUtils.IsIndexGrabbing(ControllerHandedness);
             isMiddleGrabbing = HandPoseUtils.IsMiddleGrabbing(ControllerHandedness);
