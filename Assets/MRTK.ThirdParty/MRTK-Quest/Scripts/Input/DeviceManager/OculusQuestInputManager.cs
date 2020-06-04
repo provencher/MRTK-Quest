@@ -97,6 +97,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 // Instantiate camera rig as a child of the MixedRealityPlayspace
                 cameraRig = GameObject.Instantiate(MRTKOculusConfig.Instance.OVRCameraRigPrefab);
 
+                // Ensure all related game objects are configured
+                cameraRig.EnsureGameObjectIntegrity();
+
                 if (mainCamera != null)
                 {
                     // We already had a main camera MRTK probably started using, let's replace the CenterEyeAnchor MainCamera with it
@@ -106,9 +109,13 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     mainCamera.name = prefabMainCamera.name;
                     GameObject.Destroy(prefabMainCamera);
                 }
+                cameraRig.transform.SetParent(MixedRealityPlayspace.Transform);
             }
-            // Ensure all related game objects are configured
-            cameraRig.EnsureGameObjectIntegrity();
+            else
+            {
+                // Ensure all related game objects are configured
+                cameraRig.EnsureGameObjectIntegrity();
+            }
 
             bool useAvatarHands = MRTKOculusConfig.Instance.RenderAvatarHandsInsteadOfController;
             // If using Avatar hands, de-activate ovr controller rendering
