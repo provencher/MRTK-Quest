@@ -118,7 +118,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             if (!CanUpdateCursor)
             {
                 SetRenderersActive(false);
-                OnCursorStateChange(CursorStateEnum.Release);
+                ResetCursor();
                 return;
             }
 
@@ -166,7 +166,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
             // Spin ring gently
             RingCursorVisual.localRotation = Quaternion.Euler(Mathf.Repeat(Time.time * 0.25f, 1f) * Vector3.up * 360f);
-           
+
             // Point the arrow towards the target orientation
             cursorOrientation.y = pointer.PointerOrientation;
             arrowTransform.eulerAngles = cursorOrientation;
@@ -185,15 +185,15 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 case CursorStateEnum.ObserveHover:
                 case CursorStateEnum.Interact:
                 case CursorStateEnum.InteractHover:
-                    scaleOrigin = 0f;
                     scaleTarget = 1f;
+                    scaleOrigin = 0f;
                     break;
                 case CursorStateEnum.None:
                 case CursorStateEnum.Release:
                 case CursorStateEnum.Contextual:
                 default:
-                    scaleOrigin = PrimaryCursorVisual.localScale.x;
                     scaleTarget = 0f;
+                    scaleOrigin = PrimaryCursorVisual.localScale.x / startScale.x;
                     break;
             }
         }
