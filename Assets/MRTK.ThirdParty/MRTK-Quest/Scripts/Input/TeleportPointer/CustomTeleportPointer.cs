@@ -408,6 +408,19 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #endregion
 
+
+        #region Audio Management
+        [Header("Audio management")]
+        [SerializeField]
+        private AudioSource pointerAudioSource = null;
+
+        [SerializeField]
+        private AudioClip teleportRequestedClip = null;
+
+        [SerializeField]
+        private AudioClip teleportCompletedClip = null;
+        #endregion
+
         #region Lifecycle Manageament
 
         protected void OnEnable()
@@ -801,6 +814,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         TeleportRequestRaised = true;
 
                         CoreServices.TeleportSystem?.RaiseTeleportRequest(this, TeleportHotSpot);
+                        if (pointerAudioSource != null && teleportCompletedClip != null)
+                        {
+                            pointerAudioSource.PlayOneShot(teleportRequestedClip);
+                        }
                     }
                     else if (canMove)
                     {
@@ -867,6 +884,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
                     {
                         CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotSpot);
+                        if (pointerAudioSource != null && teleportCompletedClip != null)
+                        {
+                            pointerAudioSource.PlayOneShot(teleportCompletedClip);
+                        }
                     }
                 }
 
