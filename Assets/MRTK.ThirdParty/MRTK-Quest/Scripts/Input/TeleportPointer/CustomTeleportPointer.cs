@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------ -
+//------------------------------------------------------------------------------ -
 //MRTK - Quest
 //https ://github.com/provencher/MRTK-Quest
 //------------------------------------------------------------------------------ -
@@ -450,7 +450,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         private void CheckInitialization()
         {
-            validRayCastLayers = new LayerMask[] {ValidLayers};
+            validRayCastLayers = new LayerMask[] { ValidLayers };
 
             if (parabolicLineData == null)
             {
@@ -704,7 +704,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         {
             if (gameObject == null) return;
 
-            if(TeleportHotSpot != null)
+            if (TeleportHotSpot != null)
             {
                 CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
                 TeleportHotSpot = null;
@@ -779,11 +779,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             // e.g., by updating its appearance.
             OnPostSceneQuery();
 
-            // Check input changed
-            if (currentInputPosition != teleportDirection)
-            {
-                OnInputChanged(teleportDirection, autoActivate);
-            }
+            OnInputChanged(teleportDirection, autoActivate);
         }
 
         private void OnInputChanged(Vector2 newInputSource, bool autoActivate)
@@ -866,9 +862,37 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     }
                 }
             }
-            else if(autoActivate)
+            else if (autoActivate)
             {
-                ConfirmTeleport();
+                if (!canTeleport && !TeleportRequestRaised)
+                {
+                    // Reset the move flag when the user stops moving the joystick
+                    // but hasn't yet started teleport request.
+                    canMove = true;
+                }
+
+                if (canTeleport)
+                {
+                    canTeleport = false;
+                    TeleportRequestRaised = false;
+
+                    if (TeleportSurfaceResult == TeleportSurfaceResult.Valid ||
+                        TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
+                    {
+                        CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotSpot);
+                        if (pointerAudioSource != null && teleportCompletedClip != null)
+                        {
+                            pointerAudioSource.PlayOneShot(teleportCompletedClip);
+                        }
+                    }
+                }
+
+                if (TeleportRequestRaised)
+                {
+                    canTeleport = false;
+                    TeleportRequestRaised = false;
+                    CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
+                }
             }
 
             if (TeleportRequestRaised &&
@@ -876,39 +900,6 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                 TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
             {
                 canTeleport = true;
-            }
-        }
-
-        public void ConfirmTeleport()
-        {
-            if (!canTeleport && !TeleportRequestRaised)
-            {
-                // Reset the move flag when the user stops moving the joystick
-                // but hasn't yet started teleport request.
-                canMove = true;
-            }
-
-            if (canTeleport)
-            {
-                canTeleport = false;
-                TeleportRequestRaised = false;
-
-                if (TeleportSurfaceResult == TeleportSurfaceResult.Valid ||
-                    TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
-                {
-                    CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotSpot);
-                    if (pointerAudioSource != null && teleportCompletedClip != null)
-                    {
-                        pointerAudioSource.PlayOneShot(teleportCompletedClip);
-                    }
-                }
-            }
-
-            if (TeleportRequestRaised)
-            {
-                canTeleport = false;
-                TeleportRequestRaised = false;
-                CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
             }
         }
 
