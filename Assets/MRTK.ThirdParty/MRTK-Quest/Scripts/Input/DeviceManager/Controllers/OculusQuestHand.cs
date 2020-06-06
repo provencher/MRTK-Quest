@@ -31,7 +31,9 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+/*
 using prvncher.MixedReality.Toolkit.Input.Teleport;
+*/
 using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
 using static OVRSkeleton;
@@ -42,12 +44,12 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
     public class OculusQuestHand : BaseHand, IMixedRealityHand
     {
         private MixedRealityPose currentPointerPose = MixedRealityPose.ZeroIdentity;
-
+/*
         /// <summary>
         /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
         /// </summary>
         public CustomTeleportPointer TeleportPointer { get; set; }
-
+*/
         /// <summary>
         /// Pose used by hand ray
         /// </summary>
@@ -188,9 +190,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
                 UpdateVelocity();
             }
-
+/*
             UpdateCustomTeleportPointer(currentPointerPose.Position, currentPointerPose.Rotation);
-
+*/
             for (int i = 0; i < Interactions?.Length; i++)
             {
                 switch (Interactions[i].InputType)
@@ -245,7 +247,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
             }
         }
-
+/*
         private void UpdateCustomTeleportPointer(Vector3 worldPosition, Quaternion worldRotation)
         {
             if (TeleportPointer == null) return;
@@ -276,7 +278,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             TeleportPointer.UpdatePointer(isReadyForTeleport, isIndexGrabbing ? Vector2.zero : stickInput);
         }
-
+*/
         #region HandJoints
         protected readonly Dictionary<TrackedHandJoint, MixedRealityPose> jointPoses = new Dictionary<TrackedHandJoint, MixedRealityPose>();
 

@@ -31,7 +31,9 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+/*
 using prvncher.MixedReality.Toolkit.Input.Teleport;
+*/
 using UnityEngine;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
@@ -43,12 +45,12 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
-
+/*
         /// <summary>
         /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
         /// </summary>
         public CustomTeleportPointer TeleportPointer { get; set; }
-
+*/
         private List<Renderer> handRenderers = new List<Renderer>();
         private Material handMaterial = null;
 
@@ -179,9 +181,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             }
 
             bool isSelecting = isTriggerPressed || isGripPressed;
-
+/*
             UpdateCustomTeleportPointer(stickInput, worldPosition, worldRotation);
-
+*/
             for (int i = 0; i < Interactions?.Length; i++)
             {
                 switch (Interactions[i].InputType)
@@ -236,7 +238,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
             }
         }
-
+/*
         private void UpdateCustomTeleportPointer(Vector2 stickInput, Vector3 worldPosition, Quaternion worldRotation)
         {
             if (TeleportPointer == null) return;
@@ -262,7 +264,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             TeleportPointer.transform.rotation = worldRotation;
             TeleportPointer.UpdatePointer(pressingStick, stickInput);
         }
-
+*/
         /// <summary>
         /// Updates material instance used for avatar hands.
         /// </summary>

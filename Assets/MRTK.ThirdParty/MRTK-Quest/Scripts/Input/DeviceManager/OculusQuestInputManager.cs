@@ -48,9 +48,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private Dictionary<Handedness, OculusQuestHand> inactiveHandCache = new Dictionary<Handedness, OculusQuestHand>();
         private Dictionary<Handedness, OculusQuestController> inactiveControllerCache = new Dictionary<Handedness, OculusQuestController>();
-
+/*
         private Dictionary<Handedness, CustomTeleportPointer> teleportPointers = new Dictionary<Handedness, CustomTeleportPointer>();
-
+*/
         private OVRCameraRig cameraRig;
 
         private OVRHand rightHand;
@@ -254,7 +254,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 controller.InputSource.Pointers[i].Controller = controller;
             }
-
+/*
             if (MixedRealityToolkit.IsTeleportSystemEnabled)
             {
                 if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
@@ -265,7 +265,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 pointer.Controller = controller;
                 controller.TeleportPointer = pointer;
             }
-
+*/
             inputSystem?.RaiseSourceDetected(controller.InputSource, controller);
 
             trackedControllers.Add(handedness, controller);
@@ -298,7 +298,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             if (controller == null) return;
             CoreServices.InputSystem?.RaiseSourceLost(controller.InputSource, controller);
             trackedControllers.Remove(controller.ControllerHandedness);
-
+/*
             if (teleportPointers.TryGetValue(controller.ControllerHandedness, out CustomTeleportPointer pointer))
             {
                 if (pointer == null)
@@ -311,6 +311,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
                 controller.TeleportPointer = null;
             }
+*/
             RecyclePointers(controller.InputSource);
         }
         #endregion
@@ -384,7 +385,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 handController.InputSource.Pointers[i].Controller = handController;
             }
-
+/*
             if (MixedRealityToolkit.IsTeleportSystemEnabled)
             {
                 if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
@@ -395,7 +396,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 pointer.Controller = handController;
                 handController.TeleportPointer = pointer;
             }
-
+*/
             inputSystem?.RaiseSourceDetected(handController.InputSource, handController);
 
             trackedHands.Add(handedness, handController);
@@ -426,7 +427,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private void RemoveHandDevice(OculusQuestHand hand)
         {
             if (hand == null) return;
-
+/*
             if (teleportPointers.TryGetValue(hand.ControllerHandedness, out CustomTeleportPointer pointer))
             {
                 if (pointer == null)
@@ -439,7 +440,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
                 hand.TeleportPointer = null;
             }
-
+*/
             hand.CleanupHand();
             inactiveHandCache.Add(hand.ControllerHandedness, hand);
 
