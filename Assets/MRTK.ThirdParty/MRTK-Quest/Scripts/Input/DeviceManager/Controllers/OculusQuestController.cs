@@ -31,7 +31,6 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
-using prvncher.MixedReality.Toolkit.Input.Teleport;
 using UnityEngine;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
@@ -43,11 +42,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
-
-        /// <summary>
-        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
-        /// </summary>
-        public CustomTeleportPointer TeleportPointer { get; set; }
 
         private List<Renderer> handRenderers = new List<Renderer>();
         private Material handMaterial = null;
@@ -180,7 +174,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             bool isSelecting = isTriggerPressed || isGripPressed;
 
-            UpdateCustomTeleportPointer(stickInput, worldPosition, worldRotation);
+            UpdateTeleport(stickInput);
 
             for (int i = 0; i < Interactions?.Length; i++)
             {
@@ -237,9 +231,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             }
         }
 
-        private void UpdateCustomTeleportPointer(Vector2 stickInput, Vector3 worldPosition, Quaternion worldRotation)
+        private void UpdateTeleport(Vector2 stickInput)
         {
-            if (TeleportPointer == null) return;
+            MixedRealityInputAction teleportAction = MixedRealityInputAction.None;
 
             // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
             bool anyPointersLockedWithHand = false;
@@ -252,15 +246,20 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     anyPointersLockedWithHand |= nearPointer.IsNearObject;
                 }
                 anyPointersLockedWithHand |= InputSource.Pointers[i].IsFocusLocked;
+
+                if (InputSource.Pointers[i] is IMixedRealityTeleportPointer)
+                {
+                    teleportAction = ((Microsoft.MixedReality.Toolkit.Teleport.TeleportPointer)InputSource.Pointers[i]).TeleportInputAction;
+                }
             }
 
-            bool pressingStick = !anyPointersLockedWithHand && stickInput != Vector2.zero;
-            isInPointingPose = !pressingStick;
+            bool isReadyForTeleport = !anyPointersLockedWithHand && stickInput != Vector2.zero;
+            isInPointingPose = !isReadyForTeleport;
 
-            TeleportPointer.gameObject.SetActive(IsPositionAvailable);
-            TeleportPointer.transform.position = worldPosition;
-            TeleportPointer.transform.rotation = worldRotation;
-            TeleportPointer.UpdatePointer(pressingStick, stickInput);
+            if (teleportAction.Equals(MixedRealityInputAction.None)) { return; }
+
+            CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction,
+                isInPointingPose ? Vector2.zero : stickInput);
         }
 
         /// <summary>

@@ -31,7 +31,6 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
-using prvncher.MixedReality.Toolkit.Input.Teleport;
 using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
 using static OVRSkeleton;
@@ -42,11 +41,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
     public class OculusQuestHand : BaseHand, IMixedRealityHand
     {
         private MixedRealityPose currentPointerPose = MixedRealityPose.ZeroIdentity;
-
-        /// <summary>
-        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
-        /// </summary>
-        public CustomTeleportPointer TeleportPointer { get; set; }
 
         /// <summary>
         /// Pose used by hand ray
@@ -189,7 +183,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 UpdateVelocity();
             }
 
-            UpdateCustomTeleportPointer(currentPointerPose.Position, currentPointerPose.Rotation);
+            UpdateTeleport();
 
             for (int i = 0; i < Interactions?.Length; i++)
             {
@@ -246,9 +240,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             }
         }
 
-        private void UpdateCustomTeleportPointer(Vector3 worldPosition, Quaternion worldRotation)
+        private void UpdateTeleport()
         {
-            if (TeleportPointer == null) return;
+            MixedRealityInputAction teleportAction = MixedRealityInputAction.None;
 
             // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
             bool anyPointersLockedWithHand = false;
@@ -261,20 +255,23 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     anyPointersLockedWithHand |= nearPointer.IsNearObject;
                 }
                 anyPointersLockedWithHand |= InputSource.Pointers[i].IsFocusLocked;
+
+                if (InputSource.Pointers[i] is IMixedRealityTeleportPointer)
+                {
+                    teleportAction = ((Microsoft.MixedReality.Toolkit.Teleport.TeleportPointer)InputSource.Pointers[i]).TeleportInputAction;
+                }
             }
+
+            if (teleportAction.Equals(MixedRealityInputAction.None)) { return; }
 
             // We close middle finger to signal spider-man gesture, and as being ready for teleport
             bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose &&
                                       isMiddleGrabbing;
 
-
             Vector2 stickInput = isReadyForTeleport ? Vector2.up : Vector2.zero;
 
-            TeleportPointer.gameObject.SetActive(isReadyForTeleport);
-            TeleportPointer.transform.position = worldPosition;
-            TeleportPointer.transform.rotation = worldRotation;
-
-            TeleportPointer.UpdatePointer(isReadyForTeleport, isIndexGrabbing ? Vector2.zero : stickInput);
+            CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction, 
+                isIndexGrabbing ? Vector2.zero : stickInput);
         }
 
         #region HandJoints
