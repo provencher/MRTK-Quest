@@ -31,9 +31,11 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+using prvncher.MixedReality.Toolkit.Input.Teleport;
 using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
 using static OVRSkeleton;
+using Object = UnityEngine.Object;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 {
@@ -49,6 +51,11 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
+
+        /// <summary>
+        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
+        /// </summary>
+        public CustomTeleportPointer TeleportPointer { get; set; }
 
         // Use Kalman filters to improve palm and index positions, as they drive many interactions
         private KalmanFilterVector3 palmFilter = new KalmanFilterVector3();
@@ -242,6 +249,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private void UpdateTeleport()
         {
+            if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.None) return;
+
             MixedRealityInputAction teleportAction = MixedRealityInputAction.None;
 
             // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
@@ -262,16 +271,33 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
             }
 
-            if (teleportAction.Equals(MixedRealityInputAction.None)) { return; }
-
             // We close middle finger to signal spider-man gesture, and as being ready for teleport
             bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose &&
                                       isMiddleGrabbing;
 
             Vector2 stickInput = isReadyForTeleport ? Vector2.up : Vector2.zero;
 
-            CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction, 
-                isIndexGrabbing ? Vector2.zero : stickInput);
+            RaiseTeleportInput(isIndexGrabbing ? Vector2.zero : stickInput, teleportAction, isReadyForTeleport);
+        }
+
+        private void RaiseTeleportInput(Vector2 teleportInput, MixedRealityInputAction teleportAction, bool isReadyForTeleport)
+        {
+            switch (MRTKOculusConfig.Instance.ActiveTeleportPointerMode)
+            {
+                case MRTKOculusConfig.TeleportPointerMode.Custom:
+                    if (TeleportPointer == null) return;
+                    TeleportPointer.gameObject.SetActive(isReadyForTeleport);
+                    TeleportPointer.transform.position = currentPointerPose.Position;
+                    TeleportPointer.transform.rotation = currentPointerPose.Rotation;
+                    TeleportPointer.UpdatePointer(isReadyForTeleport, teleportInput);
+                    break;
+                case MRTKOculusConfig.TeleportPointerMode.Official:
+                    if (teleportAction.Equals(MixedRealityInputAction.None)) return;
+                    CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction, teleportInput);
+                    break;
+                default:
+                    return;
+            }
         }
 
         #region HandJoints

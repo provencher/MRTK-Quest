@@ -113,7 +113,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             startScale = PrimaryCursorVisual.localScale;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (!CanUpdateCursor)
             {

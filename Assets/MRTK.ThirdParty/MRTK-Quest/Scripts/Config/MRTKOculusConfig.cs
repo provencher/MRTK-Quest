@@ -36,6 +36,16 @@ namespace prvncher.MixedReality.Toolkit.Config
     [CreateAssetMenu(menuName = "MRTK-Quest/MRTK-OculusConfig")]
     public class MRTKOculusConfig : ScriptableObject
     {
+        /// <summary>
+        /// Enum used for controlling the teleport pointer activated by MRTK Quest controllers.
+        /// </summary>
+        public enum TeleportPointerMode
+        {
+            Custom,
+            Official,
+            None
+        }
+
         private static MRTKOculusConfig instance;
         public static MRTKOculusConfig Instance
         {
@@ -91,6 +101,15 @@ namespace prvncher.MixedReality.Toolkit.Config
         private GameObject localAvatarPrefab = null;
 
         [Header("Pointer Configuration")]
+        [SerializeField]
+        [Tooltip("Controls which teleport mode is utilized by MRTK-Quest controllers.")]
+        private TeleportPointerMode teleportPointerMode = TeleportPointerMode.Custom;
+
+        /// <summary>
+        /// Controls which teleport mode is utilized by MRTK-Quest controllers.
+        /// </summary>
+        public TeleportPointerMode ActiveTeleportPointerMode => teleportPointerMode;
+
         [SerializeField]
         [Tooltip("Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently support teleport with articulated hands.")]
         private GameObject customTeleportPointerPrefab = null;

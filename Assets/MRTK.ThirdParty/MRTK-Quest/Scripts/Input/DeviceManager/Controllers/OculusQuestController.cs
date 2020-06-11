@@ -31,6 +31,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections.Generic;
 using prvncher.MixedReality.Toolkit.Config;
+using prvncher.MixedReality.Toolkit.Input.Teleport;
 using UnityEngine;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
@@ -42,6 +43,11 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private MixedRealityPose currentIndexPose = MixedRealityPose.ZeroIdentity;
         private MixedRealityPose currentGripPose = MixedRealityPose.ZeroIdentity;
+
+        /// <summary>
+        /// Teleport pointer reference. Needs custom pointer because MRTK does not support teleporting with articulated hands.
+        /// </summary>
+        public CustomTeleportPointer TeleportPointer { get; set; }
 
         private List<Renderer> handRenderers = new List<Renderer>();
         private Material handMaterial = null;
@@ -233,6 +239,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private void UpdateTeleport(Vector2 stickInput)
         {
+            if(MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.None) return;
+
             MixedRealityInputAction teleportAction = MixedRealityInputAction.None;
 
             // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
@@ -256,11 +264,29 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             bool isReadyForTeleport = !anyPointersLockedWithHand && stickInput != Vector2.zero;
             isInPointingPose = !isReadyForTeleport;
 
-            if (teleportAction.Equals(MixedRealityInputAction.None)) { return; }
-
-            CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction,
-                isInPointingPose ? Vector2.zero : stickInput);
+            RaiseTeleportInput(isInPointingPose ? Vector2.zero : stickInput, teleportAction, isReadyForTeleport);
         }
+
+        private void RaiseTeleportInput(Vector2 teleportInput, MixedRealityInputAction teleportAction, bool isReadyForTeleport)
+        {
+            switch (MRTKOculusConfig.Instance.ActiveTeleportPointerMode)
+            {
+                case MRTKOculusConfig.TeleportPointerMode.Custom:
+                    if (TeleportPointer == null) return;
+                    TeleportPointer.gameObject.SetActive(isReadyForTeleport);
+                    TeleportPointer.transform.position = currentPointerPose.Position;
+                    TeleportPointer.transform.rotation = currentPointerPose.Rotation;
+                    TeleportPointer.UpdatePointer(isReadyForTeleport, teleportInput);
+                    break;
+                case MRTKOculusConfig.TeleportPointerMode.Official:
+                    if (teleportAction.Equals(MixedRealityInputAction.None)) return;
+                    CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportAction, teleportInput);
+                    break;
+                default:
+                    return;
+            }
+        }
+
 
         /// <summary>
         /// Updates material instance used for avatar hands.

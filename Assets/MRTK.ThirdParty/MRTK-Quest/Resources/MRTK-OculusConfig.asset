@@ -16,8 +16,9 @@ MonoBehaviour:
   ovrCameraRigPrefab: {fileID: 2343937678411072827, guid: e855e4c2a827daf45be5e0ca86dd6d05,
     type: 3}
   allowDevToManageAvatarPrefab: 0
-  localAvatarPrefab: {fileID: 1703282039130822552, guid: bc9433565454e104f9ac73600c65a612,
+  localAvatarPrefab: {fileID: 6297684789857299957, guid: bc9433565454e104f9ac73600c65a612,
     type: 3}
+  teleportPointerMode: 0
   customTeleportPointerPrefab: {fileID: 3315140749854082096, guid: 6f4e2804d6ac4944e99e1737f500bb7a,
     type: 3}
   useCustomHandMaterial: 1
