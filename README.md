@@ -6,12 +6,13 @@ It was built to showcase the hand-driven interaction model designed by Microsoft
 - Full support for articulated hand tracking, and simulated hand tracking using controllers with avatar hands.
 - Support for Oculus Link on Quest with controllers, which means rapid iteration without builds.
 - Full support for any interaction in the MRTK designed to work for HoloLens 2.
+- Teleport! MRTK-Quest is currently the only way to integrate support for teleporting with articulated hand tracking in MRTK.
 
 ## Demo Video
 [![Demo video](https://user-images.githubusercontent.com/7420990/83885080-dcde6100-a713-11ea-88e2-46883402cfe8.gif)](https://twitter.com/prvncher/status/1268901965175668736)
 
 # Supported versions
-- Unity 2019.3.15f1
+- Unity 2019.4.0f1
 - Oculus Integration 17.0
 - Mixed Reality Toolkit v2.4.0+
 
@@ -106,14 +107,18 @@ MRTK has a Project Configuration modal window that pops up when you first open a
 - **MultiThreaded Rendering** The project configuration window will attempt to disable this option, 
 however, from my testing with Quest, it works properly, and improves performance.
 
-
 ## 5. MRTK-Quest Integration Configuration
 New Config scriptable object exposing hand mesh material and performance seetings.
 This is a project singleton located in Resources/MRTK-OculusConfig    
 ![image](https://user-images.githubusercontent.com/7420990/80736858-b871e200-8ae0-11ea-869a-60b6df212365.png)
 
+## 6. Teleport Configuration
+Teleport support now comes in a few flavors. To make use of either supported mode, you must enable the teleport system in your profile.
+- Custom. This is the fully configured version that includes audio and improved visuals. It is enabled by default.
+- Official. This version can be set in the MRTK-OculusConfig. Enabling this requires also adding the Parabollic pointer to the Input Pointer Profile. This pointer is less well tested, but will receive updates alongside MRTK versions.
+- None. This completely de-activates the teleport pointer from MRTK-Quest.
 
-## 6. Community and support
+## 7. Community and support
 If you'd like to discuss your issues or ideas to improve this project, please join us over on the [HoloDevs Slack](https://holodevelopersslack.azurewebsites.net/).
 There is a public channel called #MRTK-Quest.
 

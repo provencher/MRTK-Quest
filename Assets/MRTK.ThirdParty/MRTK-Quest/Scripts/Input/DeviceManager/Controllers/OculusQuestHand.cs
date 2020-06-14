@@ -160,6 +160,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             get
             {
+                if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.None) return false;
                 if (!TryGetJoint(TrackedHandJoint.Palm, out var palmPose)) return false;
 
                 Transform cameraTransform = CameraCache.Main.transform;
