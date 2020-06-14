@@ -108,7 +108,15 @@ namespace prvncher.MixedReality.Toolkit.Config
         /// <summary>
         /// Controls which teleport mode is utilized by MRTK-Quest controllers.
         /// </summary>
-        public TeleportPointerMode ActiveTeleportPointerMode => teleportPointerMode;
+        public TeleportPointerMode ActiveTeleportPointerMode
+        {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+            // If the platform is not supported by oculus, we need to ensure we don't create a teleport pointer that can't be used.
+            get => TeleportPointerMode.None;
+#else
+            get => teleportPointerMode;
+#endif
+        }
 
         [SerializeField]
         [Tooltip("Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently support teleport with articulated hands.")]
