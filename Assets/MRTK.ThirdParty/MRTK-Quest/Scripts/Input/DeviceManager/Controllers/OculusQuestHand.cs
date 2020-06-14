@@ -36,6 +36,7 @@ using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
 using static OVRSkeleton;
 using Object = UnityEngine.Object;
+using TeleportPointer = Microsoft.MixedReality.Toolkit.Teleport.TeleportPointer;
 
 namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 {
@@ -66,6 +67,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private bool isIndexGrabbing = false;
         private bool isMiddleGrabbing = false;
+        private bool isThumbGrabbing = false;
 
         private int pinchStrengthProp;
 
@@ -149,7 +151,25 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 Vector3 projectedPalmUp = Vector3.ProjectOnPlane(-palmPose.Up, cameraTransform.up);
 
                 // We check if the palm forward is roughly in line with the camera lookAt
-                return Vector3.Dot(cameraTransform.forward, projectedPalmUp) > 0.3f && Vector3.Dot(-palmPose.Up, Vector3.up) < 0.5f;
+                // We must also ensure we're not in teleport pose
+                return Vector3.Dot(cameraTransform.forward, projectedPalmUp) > 0.3f && !IsInTeleportPose;
+            }
+        }
+
+        protected bool IsInTeleportPose
+        {
+            get
+            {
+                if (!TryGetJoint(TrackedHandJoint.Palm, out var palmPose)) return false;
+
+                Transform cameraTransform = CameraCache.Main.transform;
+
+                Vector3 projectedPalmUp = Vector3.ProjectOnPlane(-palmPose.Up, cameraTransform.forward);
+
+                // We check if the palm up is roughly in line with the camera up
+                return Vector3.Dot(-palmPose.Up, cameraTransform.up) > 0.6f
+                       // Thumb must be extended, and middle must be grabbing
+                       && !isThumbGrabbing && isMiddleGrabbing;
             }
         }
 
@@ -253,6 +273,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             MixedRealityInputAction teleportAction = MixedRealityInputAction.None;
 
+            IMixedRealityTeleportPointer teleportPointer = TeleportPointer;
+
             // Check if we're focus locked or near something interactive to avoid teleporting unintentionally.
             bool anyPointersLockedWithHand = false;
             for (int i = 0; i < InputSource?.Pointers?.Length; i++)
@@ -265,15 +287,23 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
                 anyPointersLockedWithHand |= InputSource.Pointers[i].IsFocusLocked;
 
-                if (InputSource.Pointers[i] is IMixedRealityTeleportPointer)
+                // If official teleport mode and we have a teleport pointer registered, we get the input action to trigger it.
+                if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.Official
+                    && InputSource.Pointers[i] is IMixedRealityTeleportPointer)
                 {
-                    teleportAction = ((Microsoft.MixedReality.Toolkit.Teleport.TeleportPointer)InputSource.Pointers[i]).TeleportInputAction;
+                    teleportPointer = (TeleportPointer)InputSource.Pointers[i];
+                    teleportAction = ((TeleportPointer)teleportPointer).TeleportInputAction;
                 }
             }
 
             // We close middle finger to signal spider-man gesture, and as being ready for teleport
-            bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && !IsInPointingPose &&
-                                      isMiddleGrabbing;
+            bool isReadyForTeleport = !anyPointersLockedWithHand && IsPositionAvailable && IsInTeleportPose;
+
+            // If not ready for teleport, we raise a cancellation event to prevent accidental teleportation.
+            if (!isReadyForTeleport && teleportPointer != null)
+            {
+                CoreServices.TeleportSystem?.RaiseTeleportCanceled(teleportPointer, null);
+            }
 
             Vector2 stickInput = isReadyForTeleport ? Vector2.up : Vector2.zero;
 
@@ -286,7 +316,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 case MRTKOculusConfig.TeleportPointerMode.Custom:
                     if (TeleportPointer == null) return;
-                    TeleportPointer.gameObject.SetActive(isReadyForTeleport);
+                    TeleportPointer.gameObject.SetActive(IsPositionAvailable);
                     TeleportPointer.transform.position = currentPointerPose.Position;
                     TeleportPointer.transform.rotation = currentPointerPose.Rotation;
                     TeleportPointer.UpdatePointer(isReadyForTeleport, teleportInput);
@@ -407,6 +437,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             isIndexGrabbing = HandPoseUtils.IsIndexGrabbing(ControllerHandedness);
             isMiddleGrabbing = HandPoseUtils.IsMiddleGrabbing(ControllerHandedness);
+            isThumbGrabbing = HandPoseUtils.IsThumbGrabbing(ControllerHandedness);
 
             // Pinch was also used as grab, we want to allow hand-curl grab not just pinch.
             // Determine pinch and grab separately
