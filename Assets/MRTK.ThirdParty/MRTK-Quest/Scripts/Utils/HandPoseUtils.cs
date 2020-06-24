@@ -71,5 +71,24 @@ namespace prvncher.MixedReality.Toolkit.Utils
             }
             return false;
         }
+
+        /// <summary>
+        /// Returns true if middle thumb tip is closer to pinky knuckle than thumb knuckle joint.
+        /// </summary>
+        /// <param name="hand">Hand to query joint pose against.</param>
+        /// <returns></returns>
+        public static bool IsThumbGrabbing(Handedness hand)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, hand, out var pinkyKnucklePose) &&
+                HandJointUtils.TryGetJointPose(TrackedHandJoint.ThumbTip, hand, out var thumbTipPose) &&
+                HandJointUtils.TryGetJointPose(TrackedHandJoint.ThumbProximalJoint, hand, out var thumbKnucklePose))
+            {
+                // compare pinkyKnuckle-ThumbKnuckle to pinkyKnuckle-ThumbTip
+                Vector3 pinkyKnuckleToThumbTip = thumbTipPose.Position - pinkyKnucklePose.Position;
+                Vector3 pinkyKnuckleToThumbKnuckle = thumbKnucklePose.Position - pinkyKnucklePose.Position;
+                return pinkyKnuckleToThumbKnuckle.sqrMagnitude >= pinkyKnuckleToThumbTip.sqrMagnitude;
+            }
+            return false;
+        }
     }
 }

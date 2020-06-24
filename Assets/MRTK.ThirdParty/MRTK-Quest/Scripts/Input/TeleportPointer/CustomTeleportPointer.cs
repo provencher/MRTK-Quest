@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------ -
+//------------------------------------------------------------------------------ -
 //MRTK - Quest
 //https ://github.com/provencher/MRTK-Quest
 //------------------------------------------------------------------------------ -
@@ -408,6 +408,19 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #endregion
 
+
+        #region Audio Management
+        [Header("Audio management")]
+        [SerializeField]
+        private AudioSource pointerAudioSource = null;
+
+        [SerializeField]
+        private AudioClip teleportRequestedClip = null;
+
+        [SerializeField]
+        private AudioClip teleportCompletedClip = null;
+        #endregion
+
         #region Lifecycle Manageament
 
         protected void OnEnable()
@@ -437,7 +450,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         private void CheckInitialization()
         {
-            validRayCastLayers = new LayerMask[] {ValidLayers};
+            validRayCastLayers = new LayerMask[] { ValidLayers };
 
             if (parabolicLineData == null)
             {
@@ -534,16 +547,23 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
 
         #region IMixedRealityPointer Implementation
 
+
+        private StabilizedRay stabilizedRay = new StabilizedRay(0.5f);
+        private Ray stabilizationRay = new Ray();
         /// <inheritdoc />
         public void OnPreSceneQuery()
         {
+            stabilizationRay.origin = transform.position;
+            stabilizationRay.direction = transform.forward;
+            stabilizedRay.AddSample(stabilizationRay);
+
             parabolicLineData.LineTransform.rotation = Quaternion.identity;
-            parabolicLineData.Direction = transform.forward;
+            parabolicLineData.Direction = stabilizedRay.StabilizedDirection;
 
             // when pointing straight up, upDot should be close to 1.
             // when pointing straight down, upDot should be close to -1.
             // when pointing straight forward in any direction, upDot should be 0.
-            var upDot = Vector3.Dot(transform.forward, Vector3.up);
+            var upDot = Mathf.Clamp(Vector3.Dot(stabilizedRay.StabilizedDirection, Vector3.up) + 0.5f, -1f, 1f);
 
             var velocity = minParabolaVelocity;
             var distance = minDistanceModifier;
@@ -684,12 +704,12 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         {
             if (gameObject == null) return;
 
-            if(TeleportHotSpot != null)
+            if (TeleportHotSpot != null)
             {
                 CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
                 TeleportHotSpot = null;
             }
-            OnInputChanged(Vector2.zero);
+            OnInputChanged(Vector2.zero, false);
             IsActive = false;
             IsFocusLocked = false;
             Controller = null;
@@ -739,7 +759,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         /// </summary>
         /// <param name="isActive"></param>
         /// <param name="teleportDirection"></param>
-        public void UpdatePointer(bool isActive, Vector2 teleportDirection)
+        public void UpdatePointer(bool isActive, Vector2 teleportDirection, bool autoActivate = true)
         {
             if (IsActive && !isActive && TeleportHotSpot != null)
             {
@@ -759,14 +779,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
             // e.g., by updating its appearance.
             OnPostSceneQuery();
 
-            // Check input changed
-            if (currentInputPosition != teleportDirection)
-            {
-                OnInputChanged(teleportDirection);
-            }
+            OnInputChanged(teleportDirection, autoActivate);
         }
 
-        private void OnInputChanged(Vector2 newInputSource)
+        private void OnInputChanged(Vector2 newInputSource, bool autoActivate)
         {
             // Don't process input if we've got an active teleport request in progress.
             if (isTeleportRequestActive || CoreServices.TeleportSystem == null)
@@ -794,6 +810,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         TeleportRequestRaised = true;
 
                         CoreServices.TeleportSystem?.RaiseTeleportRequest(this, TeleportHotSpot);
+                        if (pointerAudioSource != null && teleportCompletedClip != null)
+                        {
+                            pointerAudioSource.PlayOneShot(teleportRequestedClip);
+                        }
                     }
                     else if (canMove)
                     {
@@ -842,7 +862,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                     }
                 }
             }
-            else
+            else if (autoActivate)
             {
                 if (!canTeleport && !TeleportRequestRaised)
                 {
@@ -860,6 +880,10 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
                     {
                         CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotSpot);
+                        if (pointerAudioSource != null && teleportCompletedClip != null)
+                        {
+                            pointerAudioSource.PlayOneShot(teleportCompletedClip);
+                        }
                     }
                 }
 

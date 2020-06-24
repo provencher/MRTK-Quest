@@ -48,7 +48,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
         private Dictionary<Handedness, OculusQuestHand> inactiveHandCache = new Dictionary<Handedness, OculusQuestHand>();
         private Dictionary<Handedness, OculusQuestController> inactiveControllerCache = new Dictionary<Handedness, OculusQuestController>();
-
         private Dictionary<Handedness, CustomTeleportPointer> teleportPointers = new Dictionary<Handedness, CustomTeleportPointer>();
 
         private OVRCameraRig cameraRig;
@@ -97,6 +96,9 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 // Instantiate camera rig as a child of the MixedRealityPlayspace
                 cameraRig = GameObject.Instantiate(MRTKOculusConfig.Instance.OVRCameraRigPrefab);
 
+                // Ensure all related game objects are configured
+                cameraRig.EnsureGameObjectIntegrity();
+
                 if (mainCamera != null)
                 {
                     // We already had a main camera MRTK probably started using, let's replace the CenterEyeAnchor MainCamera with it
@@ -106,9 +108,13 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     mainCamera.name = prefabMainCamera.name;
                     GameObject.Destroy(prefabMainCamera);
                 }
+                cameraRig.transform.SetParent(MixedRealityPlayspace.Transform);
             }
-            // Ensure all related game objects are configured
-            cameraRig.EnsureGameObjectIntegrity();
+            else
+            {
+                // Ensure all related game objects are configured
+                cameraRig.EnsureGameObjectIntegrity();
+            }
 
             bool useAvatarHands = MRTKOculusConfig.Instance.RenderAvatarHandsInsteadOfController;
             // If using Avatar hands, de-activate ovr controller rendering
@@ -248,11 +254,12 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 controller.InputSource.Pointers[i].Controller = controller;
             }
 
-            if (MixedRealityToolkit.IsTeleportSystemEnabled)
+            if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.Custom && MixedRealityToolkit.IsTeleportSystemEnabled)
             {
                 if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
                 {
                     pointer = GameObject.Instantiate(MRTKOculusConfig.Instance.CustomTeleportPrefab).GetComponent<CustomTeleportPointer>();
+                    pointer.gameObject.SetActive(false);
                     teleportPointers.Add(handedness, pointer);
                 }
                 pointer.Controller = controller;
@@ -304,6 +311,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 }
                 controller.TeleportPointer = null;
             }
+
             RecyclePointers(controller.InputSource);
         }
         #endregion
@@ -352,6 +360,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 controller.UpdateAvatarMaterial(MRTKOculusConfig.Instance.CustomHandMaterial);
             }
         }
+
         private OculusQuestHand GetOrAddHand(Handedness handedness, OVRHand ovrHand)
         {
             if (trackedHands.ContainsKey(handedness))
@@ -378,11 +387,12 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 handController.InputSource.Pointers[i].Controller = handController;
             }
 
-            if (MixedRealityToolkit.IsTeleportSystemEnabled)
+            if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.Custom &&  MixedRealityToolkit.IsTeleportSystemEnabled)
             {
                 if (!teleportPointers.TryGetValue(handedness, out CustomTeleportPointer pointer))
                 {
                     pointer = GameObject.Instantiate(MRTKOculusConfig.Instance.CustomTeleportPrefab).GetComponent<CustomTeleportPointer>();
+                    pointer.gameObject.SetActive(false);
                     teleportPointers.Add(handedness, pointer);
                 }
                 pointer.Controller = handController;

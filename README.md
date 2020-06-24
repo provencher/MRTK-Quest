@@ -6,12 +6,13 @@ It was built to showcase the hand-driven interaction model designed by Microsoft
 - Full support for articulated hand tracking, and simulated hand tracking using controllers with avatar hands.
 - Support for Oculus Link on Quest with controllers, which means rapid iteration without builds.
 - Full support for any interaction in the MRTK designed to work for HoloLens 2.
+- Teleport! MRTK-Quest is currently the only way to integrate support for teleporting with articulated hand tracking in MRTK.
 
 ## Demo Video
-[![Demo video](https://user-images.githubusercontent.com/7420990/75618297-21b59300-5b3a-11ea-8093-365ce3921c15.gif)](https://twitter.com/prvncher/status/1235731976893665280)
+[![Demo video](https://user-images.githubusercontent.com/7420990/83885080-dcde6100-a713-11ea-88e2-46883402cfe8.gif)](https://twitter.com/prvncher/status/1268901965175668736)
 
 # Supported versions
-- Unity 2019.3.15f1
+- Unity 2019.4.0f1
 - Oculus Integration 17.0
 - Mixed Reality Toolkit v2.4.0+
 
@@ -20,6 +21,9 @@ It was built to showcase the hand-driven interaction model designed by Microsoft
 - Oculus Rift/S - Windows Standalone
 
 ## FAQ
+Can I see an example project with everything setup out of the box?
+- Yes! Take a look at [MRTK-Quest-Sample](https://github.com/provencher/MRTK-Quest-Sample).
+
 Hands don't seem to work in builds, what am I doing wrong?
 - Due to licensing reasons, the Oculus Integrations folder is not included in this repo. In that folder, there is a scriptable object called *OculusProjectConfig*. In that config file, you need to set *HandTrackingSupport* to "Controllers and Hands".
 
@@ -32,8 +36,8 @@ No matter what I do, I cannot get everything setup right, what do I do?
 How do I allow MRTK-Quest and HoloLens 2 to co-exist in a project?
 - First you will need to add the scripting define "OVRPLUGIN_UNSUPPORTED_PLATFORM" to the UWP build target.
 - Second, delete the SampleFramework from your Oculus integration folder.
-- Finally, you will need to replace the OVR Camera Rig from your scene, and use the MRTK Default Camera + Playspace setup.
--> [MRTK-Quest-Sample](https://github.com/provencher/MRTK-Quest-Sample) is setup this wayfor everything except the camera configuration.
+- Finally, with MRTK-Quest V1.0 onwards, the Oculus camera rig is automatically added to your scene at runtime so the only thing needed for seamless support is to add MRTK-Quest to your profile. 
+- NOTE: You may want to check if your MixedRealityPlaypace is aligned for eye level or floor level. You can modify the MRTK-Quest_OVRCameraRig prefab to suit your project needs.
 
 With Oculus Link enabled, Unity Crashes when I hit play in editor! What do I do?
 - If your Quest goes into sleep mode, it will crash the editor when trying to hit play. If the Quest proximity sensor doesn't detect your face, it'll think your Quest isn't used.
@@ -68,7 +72,7 @@ Then clone using this command "git clone --recurse-submodules https://github.com
     and copy your MRTK files to the External folder, before proceeding to step 2.
 
 ### 1b. Develop an existing MRTK application
-Simply download the MRTK-Quest **.unitypackage** from the latest **[Release page.](https://github.com/provencher/MRTK-Quest/releases)**. As of 0.6, Examples are split out into a separate package, so that users without MRTK Examples can work with a minimal MRTK-Quest development environment.
+Simply download the MRTK-Quest **.unitypackage** from the latest **[Release page.](https://github.com/provencher/MRTK-Quest/releases)**. Examples are split out into a separate package, so that users without MRTK Examples can work with a minimal MRTK-Quest development environment. As of 1.0, some audio is stored in a separate package as well.
 
     If MRTK is already in your project, move to step 3.
 
@@ -94,7 +98,7 @@ If you wish to use MRTK as a library, and wait for official releases, this is th
     Simply move onto step 3 if your project has MRTK configured this way.
 
 ## 3. Import Oculus Integration
-Download [Oculus Integration 16.0](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) from Asset Store and import it.
+Download [Oculus Integration 17.0](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) from Asset Store and import it.
 - Alternatively just drag and drop the Oculus folder into Assets/
 
 ## 4. Project Configuration Window
@@ -103,15 +107,18 @@ MRTK has a Project Configuration modal window that pops up when you first open a
 - **MultiThreaded Rendering** The project configuration window will attempt to disable this option, 
 however, from my testing with Quest, it works properly, and improves performance.
 
-- **[Possibly obsolete][MSBuild]** In this window, there is a checkbox for MSBuild, which will attempt to add MSBuild to your manifest.json that then adds various DLLs to your project via NuGET. MSBuild is not currently necessary for functional Android builds. This may change in the future. If you are approching the 256 character path limit, this may cause problems for you.
-
 ## 5. MRTK-Quest Integration Configuration
 New Config scriptable object exposing hand mesh material and performance seetings.
 This is a project singleton located in Resources/MRTK-OculusConfig    
 ![image](https://user-images.githubusercontent.com/7420990/80736858-b871e200-8ae0-11ea-869a-60b6df212365.png)
 
+## 6. Teleport Configuration
+Teleport support now comes in a few flavors. To make use of either supported mode, you must enable the teleport system in your profile.
+- Custom. This is the fully configured version that includes audio and improved visuals. It is enabled by default.
+- Official. This version can be set in the MRTK-OculusConfig. Enabling this requires also adding the Parabollic pointer to the Input Pointer Profile. This pointer is less well tested, but will receive updates alongside MRTK versions.
+- None. This completely de-activates the teleport pointer from MRTK-Quest.
 
-## 6. Community and support
+## 7. Community and support
 If you'd like to discuss your issues or ideas to improve this project, please join us over on the [HoloDevs Slack](https://holodevelopersslack.azurewebsites.net/).
 There is a public channel called #MRTK-Quest.
 

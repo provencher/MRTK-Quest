@@ -36,6 +36,16 @@ namespace prvncher.MixedReality.Toolkit.Config
     [CreateAssetMenu(menuName = "MRTK-Quest/MRTK-OculusConfig")]
     public class MRTKOculusConfig : ScriptableObject
     {
+        /// <summary>
+        /// Enum used for controlling the teleport pointer activated by MRTK Quest controllers.
+        /// </summary>
+        public enum TeleportPointerMode
+        {
+            Custom,
+            Official,
+            None
+        }
+
         private static MRTKOculusConfig instance;
         public static MRTKOculusConfig Instance
         {
@@ -92,7 +102,26 @@ namespace prvncher.MixedReality.Toolkit.Config
 
         [Header("Pointer Configuration")]
         [SerializeField]
-        [Tooltip("Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently support teleport with articulated hands.")]
+        [Tooltip("Controls which teleport mode is utilized by MRTK-Quest controllers." +
+                 "Note to use the official pointer, you must add a parabollic pointer to your pointer input profile that supports articulated hands.")]
+        private TeleportPointerMode teleportPointerMode = TeleportPointerMode.Custom;
+
+        /// <summary>
+        /// Controls which teleport mode is utilized by MRTK-Quest controllers.
+        /// Note to use the official pointer, you must add a parabollic pointer to your pointer input profile that supports articulated hands.
+        /// </summary>
+        public TeleportPointerMode ActiveTeleportPointerMode
+        {
+#if OVRPLUGIN_UNSUPPORTED_PLATFORM
+            // If the platform is not supported by oculus, we need to ensure we don't create a teleport pointer that can't be used.
+            get => TeleportPointerMode.None;
+#else
+            get => teleportPointerMode;
+#endif
+        }
+
+        [SerializeField]
+        [Tooltip("Custom teleport pointer prefab, to be managed directly by MRTK-Quest, given that MRTK doesn't currently officially support teleport with articulated hands.")]
         private GameObject customTeleportPointerPrefab = null;
 
         /// <summary>
