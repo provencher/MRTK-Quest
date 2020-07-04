@@ -54,6 +54,23 @@ namespace prvncher.MixedReality.Toolkit.Utils
         }
 
         /// <summary>
+        /// Returns curl of ranging from 0 to 1. 1 if index finger curled/closer to wrist. 0 if the finger is not curled.
+        /// </summary>
+        /// <param name="handedness">Handedness to query joint pose against.</param>
+        /// <returns> Float ranging from 0 to 1. 0 if index finger is straight/not curled, 1 if index finger is curled</returns>
+        public static float IndexCurl(Handedness handedness)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, handedness, out var fingerTipPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexKnuckle, handedness, out var fingerKnucklePose))
+            {
+
+                return CalculateCurl(wristPose.Position, fingerKnucklePose.Position, fingerTipPose.Position);
+            }
+            return 0.0f;
+        }
+
+        /// <summary>
         /// Returns true if middle finger tip is closer to wrist than middle knuckle joint.
         /// </summary>
         /// <param name="hand">Hand to query joint pose against.</param>
@@ -73,6 +90,57 @@ namespace prvncher.MixedReality.Toolkit.Utils
         }
 
         /// <summary>
+        /// Returns curl of  middle finger ranging from 0 to 1. 1 if index finger curled/closer to wrist. 0 if the finger is not curled.
+        /// </summary>
+        /// <param name="handedness">Handedness to query joint pose against.</param>
+        /// <returns> Float ranging from 0 to 1. 0 if middle finger is straight/not curled, 1 if middle finger is curled</returns>
+        public static float MiddleCurl(Handedness handedness)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.MiddleTip, handedness, out var fingerTipPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.MiddleKnuckle, handedness, out var fingerKnucklePose))
+            {
+
+                return CalculateCurl(wristPose.Position, fingerKnucklePose.Position, fingerTipPose.Position);
+            }
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Returns curl of ring finger ranging from 0 to 1. 1 if ring finger curled/closer to wrist. 0 if the finger is not curled.
+        /// </summary>
+        /// <param name="handedness">Handedness to query joint pose against.</param>
+        /// <returns> Float ranging from 0 to 1. 0 if ring finger is straight/not curled, 1 if ring finger is curled</returns>
+        public static float RingCurl(Handedness handedness)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.RingTip, handedness, out var fingerTipPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.RingKnuckle, handedness, out var fingerKnucklePose))
+            {
+
+                return CalculateCurl(wristPose.Position, fingerKnucklePose.Position, fingerTipPose.Position);
+            }
+            return 0.0f;
+        }
+
+        /// <summary>
+        /// Returns curl of pinky finger ranging from 0 to 1. 1 if pinky finger curled/closer to wrist. 0 if the finger is not curled.
+        /// </summary>
+        /// <param name="handedness">Handedness to query joint pose against.</param>
+        /// <returns> Float ranging from 0 to 1. 0 if pinky finger is straight/not curled, 1 if pinky finger is curled</returns>
+        public static float PinkyCurl(Handedness handedness)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyTip, handedness, out var fingerTipPose) &&
+                           HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, handedness, out var fingerKnucklePose))
+            {
+
+                return CalculateCurl(wristPose.Position, fingerKnucklePose.Position, fingerTipPose.Position);
+            }
+            return 0.0f;
+        }
+
+        /// <summary>
         /// Returns true if middle thumb tip is closer to pinky knuckle than thumb knuckle joint.
         /// </summary>
         /// <param name="hand">Hand to query joint pose against.</param>
@@ -89,6 +157,22 @@ namespace prvncher.MixedReality.Toolkit.Utils
                 return pinkyKnuckleToThumbKnuckle.sqrMagnitude >= pinkyKnuckleToThumbTip.sqrMagnitude;
             }
             return false;
+        }
+
+
+
+        // Curl calculation of a finger based on the angle made by vectors wristToFingerKuncle and fingerKuckleToFingerTip.
+        static private float CalculateCurl(Vector3 wristJoint, Vector3 fingerKnuckleJoint, Vector3 fingerTipJoint)
+        {
+            var palmToFinger = (fingerKnuckleJoint - wristJoint).normalized;
+            var fingerKnuckleToTip = (fingerKnuckleJoint - fingerTipJoint).normalized;
+
+            var curl = Vector3.Dot(fingerKnuckleToTip, palmToFinger);
+
+            //Redefining the range from [-1,1] to [0,1]
+            curl = (curl + 1) / 2.0f;
+            return curl;
+
         }
     }
 }
