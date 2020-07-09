@@ -233,7 +233,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                         }
                         break;
                     case DeviceInputType.Select:
-                        Interactions[i].BoolData = IsPinching;
+                        Interactions[i].BoolData = IsPinching || IsGrabbing;
 
                         if (Interactions[i].Changed)
                         {

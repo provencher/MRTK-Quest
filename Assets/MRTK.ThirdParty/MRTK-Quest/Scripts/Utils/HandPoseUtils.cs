@@ -165,6 +165,23 @@ namespace prvncher.MixedReality.Toolkit.Utils
             return 0.0f;
         }
 
+        /// <summary>
+        /// Returns curl of thumb finger ranging from 0 to 1. 1 if thumb finger curled/closer to wrist. 0 if the finger is not curled.
+        /// </summary>
+        /// <param name="handedness">Handedness to query joint pose against.</param>
+        /// <returns> Float ranging from 0 to 1. 0 if thumb finger is straight/not curled, 1 if thumb finger is curled</returns>
+        public static float ThumbFingerCurl(Handedness handedness)
+        {
+            if (HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyKnuckle, handedness, out var pinkyKnuckle) &&
+                HandJointUtils.TryGetJointPose(TrackedHandJoint.ThumbTip, handedness, out var thumbTip) &&
+                HandJointUtils.TryGetJointPose(TrackedHandJoint.ThumbProximalJoint, handedness, out var thumbKnuckle))
+            {
+
+                return CalculateCurl(pinkyKnuckle.Position, thumbKnuckle.Position, thumbTip.Position);
+            }
+            return 0.0f;
+        }
+
         // Curl calculation of a finger based on the angle made by vectors wristToFingerKuncle and fingerKuckleToFingerTip.
         static private float CalculateCurl(Vector3 wristJoint, Vector3 fingerKnuckleJoint, Vector3 fingerTipJoint)
         {

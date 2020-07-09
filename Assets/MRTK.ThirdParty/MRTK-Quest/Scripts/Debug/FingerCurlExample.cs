@@ -36,28 +36,53 @@ namespace prvncher.MixedReality.Toolkit.Utils
     {
         [SerializeField]
         private Handedness handedness;
+
         [SerializeField]
         private GameObject indexFinger;
+
         [SerializeField]
         private GameObject middleFinger;
+
         [SerializeField]
         private GameObject ringFinger;
+
         [SerializeField]
         private GameObject pinkyFinger;
 
+        [SerializeField]
+        private GameObject thumbFinger;
+
         void Update()
         {
-            var fingerCurl = HandPoseUtils.IndexFingerCurl(handedness);
-            indexFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
+            if (indexFinger != null)
+            {
+                var indexCurl = HandPoseUtils.IndexFingerCurl(handedness);
+                indexFinger.transform.localScale = new Vector3(1.0f, 1.0f - indexCurl, 1.0f);
+            }
 
-            fingerCurl = HandPoseUtils.MiddleFingerCurl(handedness);
-            middleFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
+            if (middleFinger != null)
+            {
+                var middleCurl = HandPoseUtils.MiddleFingerCurl(handedness);
+                middleFinger.transform.localScale = new Vector3(1.0f, 1.0f - middleCurl, 1.0f);
+            }
 
-            fingerCurl = HandPoseUtils.RingFingerCurl(handedness);
-            ringFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
+            if (ringFinger != null)
+            {
+                var ringCurl = HandPoseUtils.RingFingerCurl(handedness);
+                ringFinger.transform.localScale = new Vector3(1.0f, 1.0f - ringCurl, 1.0f);
+            }
 
-            fingerCurl = HandPoseUtils.PinkyFingerCurl(handedness);
-            pinkyFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
+            if (pinkyFinger != null)
+            {
+                var pinkyCurl = HandPoseUtils.PinkyFingerCurl(handedness);
+                pinkyFinger.transform.localScale = new Vector3(1.0f, 1.0f - pinkyCurl, 1.0f);
+            }
+
+            if (thumbFinger != null)
+            {
+                var thumbCurl = HandPoseUtils.ThumbFingerCurl(handedness);
+                thumbFinger.transform.localScale = new Vector3(1.0f, 1.0f - thumbCurl, 1.0f);
+            }
         }
 
     }
