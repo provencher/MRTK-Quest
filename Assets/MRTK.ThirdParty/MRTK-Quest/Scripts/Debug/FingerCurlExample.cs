@@ -47,16 +47,16 @@ namespace prvncher.MixedReality.Toolkit.Utils
 
         void Update()
         {
-            var fingerCurl = HandPoseUtils.IndexCurl(handedness);
+            var fingerCurl = HandPoseUtils.IndexFingerCurl(handedness);
             indexFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
 
-            fingerCurl = HandPoseUtils.MiddleCurl(handedness);
+            fingerCurl = HandPoseUtils.MiddleFingerCurl(handedness);
             middleFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
 
-            fingerCurl = HandPoseUtils.RingCurl(handedness);
+            fingerCurl = HandPoseUtils.RingFingerCurl(handedness);
             ringFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
 
-            fingerCurl = HandPoseUtils.PinkyCurl(handedness);
+            fingerCurl = HandPoseUtils.PinkyFingerCurl(handedness);
             pinkyFinger.transform.localScale = new Vector3(1.0f, 1.0f - fingerCurl, 1.0f);
         }
 

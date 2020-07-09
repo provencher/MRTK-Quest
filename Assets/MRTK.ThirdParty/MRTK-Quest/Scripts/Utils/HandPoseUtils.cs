@@ -102,7 +102,7 @@ namespace prvncher.MixedReality.Toolkit.Utils
         /// </summary>
         /// <param name="handedness">Handedness to query joint pose against.</param>
         /// <returns> Float ranging from 0 to 1. 0 if index finger is straight/not curled, 1 if index finger is curled</returns>
-        public static float IndexCurl(Handedness handedness)
+        public static float IndexFingerCurl(Handedness handedness)
         {
             if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
                            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexTip, handedness, out var fingerTipPose) &&
@@ -119,7 +119,7 @@ namespace prvncher.MixedReality.Toolkit.Utils
         /// </summary>
         /// <param name="handedness">Handedness to query joint pose against.</param>
         /// <returns> Float ranging from 0 to 1. 0 if middle finger is straight/not curled, 1 if middle finger is curled</returns>
-        public static float MiddleCurl(Handedness handedness)
+        public static float MiddleFingerCurl(Handedness handedness)
         {
             if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
                            HandJointUtils.TryGetJointPose(TrackedHandJoint.MiddleTip, handedness, out var fingerTipPose) &&
@@ -136,7 +136,7 @@ namespace prvncher.MixedReality.Toolkit.Utils
         /// </summary>
         /// <param name="handedness">Handedness to query joint pose against.</param>
         /// <returns> Float ranging from 0 to 1. 0 if ring finger is straight/not curled, 1 if ring finger is curled</returns>
-        public static float RingCurl(Handedness handedness)
+        public static float RingFingerCurl(Handedness handedness)
         {
             if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
                            HandJointUtils.TryGetJointPose(TrackedHandJoint.RingTip, handedness, out var fingerTipPose) &&
@@ -153,7 +153,7 @@ namespace prvncher.MixedReality.Toolkit.Utils
         /// </summary>
         /// <param name="handedness">Handedness to query joint pose against.</param>
         /// <returns> Float ranging from 0 to 1. 0 if pinky finger is straight/not curled, 1 if pinky finger is curled</returns>
-        public static float PinkyCurl(Handedness handedness)
+        public static float PinkyFingerCurl(Handedness handedness)
         {
             if (HandJointUtils.TryGetJointPose(TrackedHandJoint.Wrist, handedness, out var wristPose) &&
                            HandJointUtils.TryGetJointPose(TrackedHandJoint.PinkyTip, handedness, out var fingerTipPose) &&

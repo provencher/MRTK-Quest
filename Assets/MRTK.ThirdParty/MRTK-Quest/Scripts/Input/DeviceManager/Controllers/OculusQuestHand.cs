@@ -69,6 +69,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private bool isMiddleGrabbing = false;
         private bool isThumbGrabbing = false;
 
+
         private int pinchStrengthProp;
 
         /// <summary>
@@ -440,6 +441,12 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             isMiddleGrabbing = HandPoseUtils.IsMiddleGrabbing(ControllerHandedness);
             isThumbGrabbing = HandPoseUtils.IsThumbGrabbing(ControllerHandedness);
 
+            // Hand Curl Properties: 
+            float indexFingerCurl = HandPoseUtils.IndexFingerCurl(ControllerHandedness);
+            float middleFingerCurl = HandPoseUtils.MiddleFingerCurl(ControllerHandedness);
+            float ringFingerCurl = HandPoseUtils.RingFingerCurl(ControllerHandedness);
+            float pinkyFingerCurl = HandPoseUtils.PinkyFingerCurl(ControllerHandedness);
+
             // Pinch was also used as grab, we want to allow hand-curl grab not just pinch.
             // Determine pinch and grab separately
             if (isTracked)
@@ -449,10 +456,11 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             if (MRTKOculusConfig.Instance.UpdateMaterialPinchStrengthValue && handMaterial != null)
             {
-                if (IsGrabbing)
-                {
-                    pinchStrength = 1.0f;
-                }
+                float gripStrength = indexFingerCurl + middleFingerCurl + ringFingerCurl + pinkyFingerCurl;
+                gripStrength /= 4.0f;
+                gripStrength = gripStrength > 0.8f ? 1.0f : gripStrength;
+
+                pinchStrength = Mathf.Max(pinchStrength, gripStrength);
                 handMaterial.SetFloat(pinchStrengthProp, pinchStrength);
             }
             return isTracked;
