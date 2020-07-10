@@ -147,7 +147,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 if (!TryGetJoint(TrackedHandJoint.Palm, out var palmPose)) return false;
 
-                Transform cameraTransform = CameraCache.Main.transform;
+                Camera mainCamera = CameraCache.Main;
+
+                if (mainCamera == null)
+                {
+                    return false;
+                }
+
+                Transform cameraTransform = mainCamera.transform;
 
                 Vector3 projectedPalmUp = Vector3.ProjectOnPlane(-palmPose.Up, cameraTransform.up);
 
@@ -164,9 +171,14 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 if (MRTKOculusConfig.Instance.ActiveTeleportPointerMode == MRTKOculusConfig.TeleportPointerMode.None) return false;
                 if (!TryGetJoint(TrackedHandJoint.Palm, out var palmPose)) return false;
 
-                Transform cameraTransform = CameraCache.Main.transform;
+                Camera mainCamera = CameraCache.Main;
 
-                Vector3 projectedPalmUp = Vector3.ProjectOnPlane(-palmPose.Up, cameraTransform.forward);
+                if (mainCamera == null)
+                {
+                    return false;
+                }
+
+                Transform cameraTransform = mainCamera.transform;
 
                 // We check if the palm up is roughly in line with the camera up
                 return Vector3.Dot(-palmPose.Up, cameraTransform.up) > 0.6f
