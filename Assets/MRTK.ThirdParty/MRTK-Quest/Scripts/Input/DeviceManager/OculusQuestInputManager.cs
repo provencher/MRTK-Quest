@@ -60,8 +60,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private OVRMeshRenderer leftMeshRenderer;
         private OVRSkeleton leftSkeleton;
 
-        private bool handsInitialized = false;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -333,7 +331,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             {
                 var hand = GetOrAddHand(handedness, ovrHand);
                 hand.UpdateController(ovrHand, ovrSkeleton, cameraRig.trackingSpace);
-                handsInitialized = true;
             }
             else
             {

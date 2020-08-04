@@ -662,7 +662,11 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
                         }
                         else
                         {
-                            TeleportSurfaceResult = TeleportSurfaceResult.Invalid;
+                            // If it's NOT a hotspot, check if the hit normal is too steep
+                            // (Hotspots override dot requirements)
+                            TeleportSurfaceResult = Vector3.Dot(Result.Details.LastRaycastHit.normal, Vector3.up) > upDirectionThreshold
+                                ? TeleportSurfaceResult.Valid
+                                : TeleportSurfaceResult.Invalid;
                         }
                     }
                     else if (((1 << Result.CurrentPointerTarget.layer) & InvalidLayers) != 0)
