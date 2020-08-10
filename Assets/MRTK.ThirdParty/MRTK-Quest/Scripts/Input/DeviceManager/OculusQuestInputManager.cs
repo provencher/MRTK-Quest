@@ -50,6 +50,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private Dictionary<Handedness, OculusQuestController> inactiveControllerCache = new Dictionary<Handedness, OculusQuestController>();
         private Dictionary<Handedness, CustomTeleportPointer> teleportPointers = new Dictionary<Handedness, CustomTeleportPointer>();
 
+#if OCULUSINTEGRATION_PRESENT
         private OVRCameraRig cameraRig;
 
         private OVRHand rightHand;
@@ -59,6 +60,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         private OVRHand leftHand;
         private OVRMeshRenderer leftMeshRenderer;
         private OVRSkeleton leftSkeleton;
+#endif
 
         /// <summary>
         /// Constructor.
@@ -75,7 +77,13 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             BaseMixedRealityProfile profile = null) : base(inputSystem, name, priority, profile)
         {
         }
-
+        
+        /// <inheritdoc />
+        public bool CheckCapability(MixedRealityCapability capability)
+        {
+            return (capability == MixedRealityCapability.ArticulatedHand);
+        }
+#if OCULUSINTEGRATION_PRESENT
         public override void Enable()
         {
             base.Enable();
@@ -183,12 +191,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 return trackedControllers.Values.ToArray<IMixedRealityController>();
             }
             return Enumerable.Empty<IMixedRealityController>().ToArray();
-        }
-
-        /// <inheritdoc />
-        public bool CheckCapability(MixedRealityCapability capability)
-        {
-            return (capability == MixedRealityCapability.ArticulatedHand);
         }
 
         public override void Update()
@@ -313,7 +315,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             RecyclePointers(controller.InputSource);
         }
         #endregion
-
+      
         #region Hand Management
         protected void UpdateHands()
         {
@@ -449,5 +451,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             RecyclePointers(hand.InputSource);
         }
         #endregion
+#endif
     }
 }

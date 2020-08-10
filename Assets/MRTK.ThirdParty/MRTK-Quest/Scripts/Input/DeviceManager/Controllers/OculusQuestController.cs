@@ -121,6 +121,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             AssignControllerMappings(DefaultInteractions);
         }
 
+#if OCULUSINTEGRATION_PRESENT
         /// <summary>
         /// Update the controller data from the provided platform state
         /// </summary>
@@ -330,7 +331,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
 
             ApplyHandMaterial();
         }
-
+#endif
         /// <summary>
         /// Updates hand material set on hand renderers with member variable stored on controller.
         /// </summary>

@@ -5,7 +5,8 @@
         "Microsoft.MixedReality.Toolkit.Services.InputSystem",
         "Microsoft.MixedReality.Toolkit.SDK",
         "prvncher.MRTKUtils",
-        "Oculus.VR"
+        "Oculus.VR",
+        "Oculus.VR.Editor"
     ],
     "includePlatforms": [
         "Android",

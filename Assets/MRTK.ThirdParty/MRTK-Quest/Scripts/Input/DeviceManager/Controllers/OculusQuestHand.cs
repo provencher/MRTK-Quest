@@ -34,7 +34,12 @@ using prvncher.MixedReality.Toolkit.Config;
 using prvncher.MixedReality.Toolkit.Input.Teleport;
 using prvncher.MixedReality.Toolkit.Utils;
 using UnityEngine;
+
+#if OCULUSINTEGRATION_PRESENT
 using static OVRSkeleton;
+using static OVRProjectConfig;
+#endif
+
 using Object = UnityEngine.Object;
 using TeleportPointer = Microsoft.MixedReality.Toolkit.Teleport.TeleportPointer;
 
@@ -81,6 +86,18 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             pinchStrengthProp = Shader.PropertyToID(MRTKOculusConfig.Instance.PinchStrengthMaterialProperty);
         }
 
+        #region IMixedRealityHand Implementation
+
+        protected readonly Dictionary<TrackedHandJoint, MixedRealityPose> jointPoses = new Dictionary<TrackedHandJoint, MixedRealityPose>();
+        /// <inheritdoc/>
+        public override bool TryGetJoint(TrackedHandJoint joint, out MixedRealityPose pose)
+        {
+            return jointPoses.TryGetValue(joint, out pose);
+        }
+
+        #endregion IMixedRealityHand Implementation
+
+#if OCULUSINTEGRATION_PRESENT
         public void InitializeHand(OVRHand ovrHand, Material handMaterial)
         {
             handRenderer = ovrHand.GetComponent<Renderer>();
@@ -124,17 +141,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         {
             AssignControllerMappings(DefaultInteractions);
         }
-
-        #region IMixedRealityHand Implementation
-
-        /// <inheritdoc/>
-        public override bool TryGetJoint(TrackedHandJoint joint, out MixedRealityPose pose)
-        {
-            return jointPoses.TryGetValue(joint, out pose);
-        }
-
-        #endregion IMixedRealityHand Implementation
-
+        
         public override bool IsInPointingPose
         {
             get
@@ -337,10 +344,8 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                     return;
             }
         }
-
-        #region HandJoints
-        protected readonly Dictionary<TrackedHandJoint, MixedRealityPose> jointPoses = new Dictionary<TrackedHandJoint, MixedRealityPose>();
-
+        
+#region HandJoints
         protected readonly Dictionary<BoneId, TrackedHandJoint> boneJointMapping = new Dictionary<BoneId, TrackedHandJoint>()
         {
             { BoneId.Hand_Thumb1, TrackedHandJoint.ThumbMetacarpalJoint },
@@ -365,7 +370,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             { BoneId.Hand_PinkyTip, TrackedHandJoint.PinkyTip },
             { BoneId.Hand_WristRoot, TrackedHandJoint.Wrist },
         };
-
+        
         private float _lastHighConfidenceTime = 0f;
         protected bool UpdateHandData(OVRHand ovrHand, OVRSkeleton ovrSkeleton)
         {
@@ -579,7 +584,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
                 CoreServices.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction, currentIndexPose);
             }
         }
-
-        #endregion
+#endregion
+#endif
     }
 }
