@@ -4,9 +4,9 @@
         "Microsoft.MixedReality.Toolkit",
         "Microsoft.MixedReality.Toolkit.Services.InputSystem",
         "Microsoft.MixedReality.Toolkit.SDK",
+        "prvncher.MRTKUtils",
         "Oculus.VR"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Android",
         "Editor",
@@ -18,5 +18,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

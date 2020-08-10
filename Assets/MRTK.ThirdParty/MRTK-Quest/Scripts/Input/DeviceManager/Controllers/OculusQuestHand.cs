@@ -58,10 +58,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         /// </summary>
         public CustomTeleportPointer TeleportPointer { get; set; }
 
-        // Use Kalman filters to improve palm and index positions, as they drive many interactions
-        private KalmanFilterVector3 palmFilter = new KalmanFilterVector3();
-        private KalmanFilterVector3 indexTipFilter = new KalmanFilterVector3();
-
         private Material handMaterial = null;
         private Renderer handRenderer = null;
 
@@ -82,8 +78,6 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
         public OculusQuestHand(TrackingState trackingState, Handedness controllerHandedness, IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
             : base(trackingState, controllerHandedness, inputSource, interactions)
         {
-            palmFilter.Reset();
-            indexTipFilter.Reset();
             pinchStrengthProp = Shader.PropertyToID(MRTKOculusConfig.Instance.PinchStrengthMaterialProperty);
         }
 
