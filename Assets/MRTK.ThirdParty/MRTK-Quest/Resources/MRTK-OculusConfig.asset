@@ -29,3 +29,6 @@ MonoBehaviour:
   _lowConfidenceTimeThreshold: 0.2
   defaultCpuLevel: 4
   defaultGpuLevel: 4
+  resolutionScale: 1.25
+  useDynamicFixedFoveatedRendering: 1
+  fixedFoveatedRenderingLevel: 3

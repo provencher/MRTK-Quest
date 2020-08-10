@@ -27,6 +27,7 @@
 //------------------------------------------------------------------------------ -
 
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace prvncher.MixedReality.Toolkit.Config
 {
@@ -260,11 +261,30 @@ namespace prvncher.MixedReality.Toolkit.Config
             }
         }
 
+        [Header("Super sampling")]
+        [Range(0.7f, 2.0f)]
+        [SerializeField]
+        float resolutionScale = 1.25f;
+
+        [Header("Fixed Foveated Rendering")]
+        [SerializeField]
+        bool useDynamicFixedFoveatedRendering = true;
+
+        [SerializeField]
+        OVRManager.FixedFoveatedRenderingLevel fixedFoveatedRenderingLevel = OVRManager.FixedFoveatedRenderingLevel.High;
+
         public void ApplyConfiguredPerformanceSettings()
         {
 #if !UNITY_EDITOR
+            XRSettings.eyeTextureResolutionScale = resolutionScale;
             OVRManager.cpuLevel = CPULevel;
             OVRManager.gpuLevel = GPULevel;
+
+            if (OVRManager.fixedFoveatedRenderingSupported)
+            {
+                OVRManager.fixedFoveatedRenderingLevel = fixedFoveatedRenderingLevel;
+                OVRManager.useDynamicFixedFoveatedRendering = useDynamicFixedFoveatedRendering;
+            }
 #endif
         }
     }
