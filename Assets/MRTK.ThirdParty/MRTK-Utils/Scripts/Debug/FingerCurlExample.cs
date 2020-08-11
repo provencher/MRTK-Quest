@@ -35,22 +35,22 @@ namespace prvncher.MixedReality.Toolkit.Utils
     public class FingerCurlExample : MonoBehaviour
     {
         [SerializeField]
-        private Handedness handedness;
+        private Handedness handedness = Handedness.None;
 
         [SerializeField]
-        private GameObject indexFinger;
+        private GameObject indexFinger = null;
 
         [SerializeField]
-        private GameObject middleFinger;
+        private GameObject middleFinger = null;
 
         [SerializeField]
-        private GameObject ringFinger;
+        private GameObject ringFinger = null;
 
         [SerializeField]
-        private GameObject pinkyFinger;
+        private GameObject pinkyFinger = null;
 
         [SerializeField]
-        private GameObject thumbFinger;
+        private GameObject thumbFinger = null;
 
         void Update()
         {

@@ -47,7 +47,7 @@ namespace prvncher.MixedReality.Toolkit.Input.Teleport
         private Vector3 cursorOrientation = Vector3.zero;
 
         [SerializeField]
-        private CustomTeleportPointer pointer;
+        private CustomTeleportPointer pointer = null;
 
         [Header("Transform References")]
         [SerializeField]

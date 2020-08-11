@@ -265,7 +265,7 @@ namespace prvncher.MixedReality.Toolkit.Config
             }
         }
 
-#if !UNITY_EDITOR
+#if OCULUSINTEGRATION_PRESENT
         [Header("Super sampling")]
         [Range(0.7f, 2.0f)]
         [SerializeField]
@@ -274,11 +274,14 @@ namespace prvncher.MixedReality.Toolkit.Config
         [Header("Fixed Foveated Rendering")]
         [SerializeField]
         bool useDynamicFixedFoveatedRendering = true;
+        
+        [SerializeField]
+        OVRManager.FixedFoveatedRenderingLevel fixedFoveatedRenderingLevel = OVRManager.FixedFoveatedRenderingLevel.High;
 #endif
 
         public void ApplyConfiguredPerformanceSettings()
         {
-#if !UNITY_EDITOR
+#if OCULUSINTEGRATION_PRESENT
             XRSettings.eyeTextureResolutionScale = resolutionScale;
             OVRManager.cpuLevel = CPULevel;
             OVRManager.gpuLevel = GPULevel;

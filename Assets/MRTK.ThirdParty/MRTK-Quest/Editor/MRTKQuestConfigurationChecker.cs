@@ -37,7 +37,7 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             else
             {
                 RemoveScriptingDefinitions(BuildTargetGroup.Android, Definitions);
-                AppendScriptingDefinitions(BuildTargetGroup.Standalone, Definitions);
+                RemoveScriptingDefinitions(BuildTargetGroup.Standalone, Definitions);
                 return false;
             }
         }
