@@ -15,8 +15,8 @@ It was built to showcase the hand-driven interaction model designed by Microsoft
 Check out [@Dilmerv](https://twitter.com/Dilmerv)'s awesome tutorial [video](https://youtu.be/rHQvQVHYMHw).
 
 # Supported versions
-- Unity 2019.4.0f1+ LTS
-- [Oculus Integration 17.0](https://developer.oculus.com/downloads/package/unity-integration/)
+- Unity 2019.4.7f1+ LTS
+- [Oculus Integration 19.0](https://developer.oculus.com/downloads/package/unity-integration/)
 - Mixed Reality Toolkit v2.4.0+
 
 # Supported target devices
