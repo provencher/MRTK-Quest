@@ -31,11 +31,13 @@ namespace prvncher.MixedReality.Toolkit.OculusQuestInput
             if (files.Length > 0)
             {
                 AppendScriptingDefinitions(BuildTargetGroup.Android, Definitions);
+                AppendScriptingDefinitions(BuildTargetGroup.Standalone, Definitions);
                 return true;
             }
             else
             {
                 RemoveScriptingDefinitions(BuildTargetGroup.Android, Definitions);
+                AppendScriptingDefinitions(BuildTargetGroup.Standalone, Definitions);
                 return false;
             }
         }
