@@ -37,7 +37,6 @@ using UnityEngine;
 
 #if OCULUSINTEGRATION_PRESENT
 using static OVRSkeleton;
-using static OVRProjectConfig;
 #endif
 
 using Object = UnityEngine.Object;
