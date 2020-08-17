@@ -101,7 +101,7 @@ If you wish to use MRTK as a library, and wait for official releases, this is th
     Simply move onto step 3 if your project has MRTK configured this way.
 
 ## 3. Import Oculus Integration
-Download [Oculus Integration 17.0](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) from Asset Store or the [Oculus Archive](https://developer.oculus.com/downloads/package/unity-integration/) and import it.
+Download [Oculus Integration 19.1](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) from Asset Store or the [Oculus Archive](https://developer.oculus.com/downloads/package/unity-integration/) and import it.
 - Alternatively just drag and drop the Oculus folder into Assets/
 
 ## 4. Project Configuration Window
