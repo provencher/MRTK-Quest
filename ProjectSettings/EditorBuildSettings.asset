@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/MRTK.ThirdParty/MRTK-Quest.Examples/Scenes/MRTK-Quest_2.4_Extra.unity
+    path: Assets/MRTK.ThirdParty/MRTK-Quest.Examples/Scenes/MRTK-Quest_2.5_Examples.unity
     guid: 330348f766b8edf4c99b87ef08c721f8
   m_configObjects: {}
