@@ -62,14 +62,8 @@ sysinfo.txt
 crashlytics-build.properties
 
 # external packages
-/Assets/XR
-/Assets/XR.meta
 /Assets/TextMesh Pro
 /Assets/TextMesh Pro.meta
-/Assets/Oculus
-/Assets/Oculus.meta
-/Assets/Plugins
-/Assets/Plugins.meta
 
 # MRTK symbolic link
 /Assets/MixedRealityToolkit
@@ -94,8 +88,5 @@ Assets/MRTK.meta
 
 MSBuildForUnity.Common.props
 
-Assets/IgnoreExtensions/
-
-Assets/IgnoreExtensions.meta
 
 ProjectSettings/UnityConnectSettings.asset
