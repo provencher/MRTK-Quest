@@ -1,8 +1,8 @@
 # MRTK-Quest
-MRTK-Quest is a Mixed Reality Toolkit (MRTK) extension for Oculus Quest, now with support for Rift/Rift S as well.
+MRTK-Quest is a Mixed Reality Toolkit (MRTK) extension for Oculus Quest (1&2), now with support for Rift/Rift S as well.
 It was built to showcase the hand-driven interaction model designed by Microsoft for HoloLens 2, on the Oculus ecosystem.
 
-**As of [MRTK 2.5](https://microsoft.github.io/MixedRealityToolkit-Unity/version/releases/2.5.0/Documentation/ReleaseNotes.html), Oculus platforms are officially supported, leveraging the code that powers MRTK-Quest. Going forward, Microsoft will be maintaining Oculus support, and as such this repository will be archived.**
+**As of [MRTK 2.5](https://microsoft.github.io/MixedRealityToolkit-Unity/version/releases/2.5.0/Documentation/ReleaseNotes.html), Oculus platforms are officially supported, leveraging the code that powers MRTK-Quest. Going forward, Microsoft will be maintaining Oculus support. This repo might get updates, but it'll be more of a hobby project than "official quest support".**
 
 ## Main features
 - Full support for articulated hand tracking, and simulated hand tracking using controllers with avatar hands.
@@ -17,32 +17,27 @@ It was built to showcase the hand-driven interaction model designed by Microsoft
 Check out [@Dilmerv](https://twitter.com/Dilmerv)'s awesome tutorial [video](https://youtu.be/rHQvQVHYMHw).
 
 # Supported versions
-- Unity 2019.4.8f1+ LTS
-- [Oculus Integration 19.1](https://developer.oculus.com/downloads/package/unity-integration/)
-- Mixed Reality Toolkit v2.4.0+
+- Unity 2019.4.12f1+ LTS
+- [Oculus Integration 20.1](https://developer.oculus.com/downloads/package/unity-integration/)
+- Mixed Reality Toolkit v2.5.1+
 
 # Supported target devices
-- Oculus Quest  - Android / Windows Standalone w/ Link
+- Oculus Quest 1 & 2  - Android / Windows Standalone w/ Link
 - Oculus Rift/S - Windows Standalone
 
 ## FAQ
 Can I see an example project with everything setup out of the box?
-- Yes! Take a look at [MRTK-Quest-Sample](https://github.com/provencher/MRTK-Quest-Sample).
-
-Hands don't seem to work in builds, what am I doing wrong?
-- Due to licensing reasons, the Oculus Integrations folder is not included in this repo. In that folder, there is a scriptable object called *OculusProjectConfig*. In that config file, you need to set *HandTrackingSupport* to "Controllers and Hands".
+- Yes! Take a look at [MRTK-Quest-Sample](https://github.com/provencher/MRTK-Quest-Sample). It is a fully setup project without any symlinks or LFS. It should be easy to clone or download and it should just work.
 
 Avatar hands don't work for me, what am I doing wrong?
-- Avatar hand support requires an app id to be set in *Resources/OvrAvatarSettings*. This repo sets a dummy id "12345".
-
-No matter what I do, I cannot get everything setup right, what do I do?
-- Some users have issues with either MRTK, or Oculus Integration. As such, I've created a sample project called [MRTK-Quest-Sample](https://github.com/provencher/MRTK-Quest-Sample). Since it features all the depedencies, it uses a different license than this project, as such I only recommend consulting it for education purposes. I'll try and keep it up to date as all the depedencies evolve.
+- Avatar hand support requires an app id to be set in *Resources/OvrAvatarSettings*. This repo sets a dummy id "12345". Note as of the latest version of the platform tools, avatar hands may require an official app id to function.
 
 How do I allow MRTK-Quest and HoloLens 2 to co-exist in a project?
+
+The version of MRTK-Quest in this project should work with other platforms following these guidelines, but you're better off using the official Quest support MRTK 2.5 solution if that is your goal.
 - First you will need to add the scripting define "OVRPLUGIN_UNSUPPORTED_PLATFORM" to the UWP build target.
 - Second, delete the SampleFramework from your Oculus integration folder.
-- Finally, with MRTK-Quest V1.0 onwards, the Oculus camera rig is automatically added to your scene at runtime so the only thing needed for seamless support is to add MRTK-Quest to your profile. 
-- NOTE: You may want to check if your MixedRealityPlaypace is aligned for eye level or floor level. You can modify the MRTK-Quest_OVRCameraRig prefab to suit your project needs.
+- Finally, 
 
 With Oculus Link enabled, Unity Crashes when I hit play in editor! What do I do?
 - If your Quest goes into sleep mode, it will crash the editor when trying to hit play. If the Quest proximity sensor doesn't detect your face, it'll think your Quest isn't used.
@@ -96,15 +91,8 @@ If you wish to **develop MRTK**, and modify code within in it, independently fro
     This will link the MRTK folders cloned via the submodule into the project.
 
 ### 2b. Obtain MRTK via alternative means
-It is possible to import MRTK directly into the Assets folder by downloading the [latest oficial release](https://github.com/microsoft/MixedRealityToolkit-Unity/releases), or via alternative means like nuget.
-
-If you wish to use MRTK as a library, and wait for official releases, this is the preferred approach.
-
-    Simply move onto step 3 if your project has MRTK configured this way.
-
-## 3. Import Oculus Integration
-Download [Oculus Integration 19.1](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) from Asset Store or the [Oculus Archive](https://developer.oculus.com/downloads/package/unity-integration/) and import it.
-- Alternatively just drag and drop the Oculus folder into Assets/
+It is possible to import MRTK directly into the Assets folder by downloading the [latest oficial release](https://github.com/microsoft/MixedRealityToolkit-Unity/releases), or via the package manager.
+Follow MRTK guidelines for this.
 
 ## 4. Project Configuration Window
 MRTK has a Project Configuration modal window that pops up when you first open a project.
@@ -134,4 +122,4 @@ Modified from:
 Furuta, Yusuke ([@tarukosu](https://twitter.com/tarukosu))
 
 # License
-MIT
+MIT + (Oculus integration license)
