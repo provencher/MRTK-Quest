@@ -63,6 +63,13 @@ MonoBehaviour:
     priority: 0
     runtimePlatform: 33
     deviceManagerProfile: {fileID: 0}
+  - componentType:
+      reference: Microsoft.MixedReality.Toolkit.XRSDK.Oculus.OculusXRSDKDeviceManager,
+        Microsoft.MixedReality.Toolkit.Providers.XRSDK.Oculus
+    componentName: XRSDK Oculus Device Manager
+    priority: 0
+    runtimePlatform: 33
+    deviceManagerProfile: {fileID: 0}
   focusProviderType:
     reference: Microsoft.MixedReality.Toolkit.Input.FocusProvider, Microsoft.MixedReality.Toolkit.Services.InputSystem
   raycastProviderType:
@@ -78,7 +85,7 @@ MonoBehaviour:
   speechCommandsProfile: {fileID: 11400000, guid: e8d0393e66374dae9646851a57dc6bc1,
     type: 2}
   enableControllerMapping: 1
-  controllerMappingProfile: {fileID: 11400000, guid: b375790d2b4152a40bde1c0375af4072,
+  controllerMappingProfile: {fileID: 11400000, guid: c876c674d41927a47b6beba1205fd673,
     type: 2}
   controllerVisualizationProfile: {fileID: 11400000, guid: 345c06fdf3732db46b96299bd3cba653,
     type: 2}
